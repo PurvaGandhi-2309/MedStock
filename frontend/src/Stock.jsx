@@ -1,0 +1,915 @@
+import React from 'react';
+import {
+  Search, Bell, User, Plus, Download,
+  Package, LayoutGrid, AlertTriangle, Calendar,
+  MoreHorizontal, ChevronLeft, ChevronRight,
+  Pill, Activity, Beaker, FileText, Droplets, TrendingUp, Clock
+} from 'lucide-react';
+
+const Stock = () => {
+  return (
+    <>
+      <style>{`
+        .batch-container {
+          min-height: 100vh;
+          background-color: #f1f5f9;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          color: #0f172a;
+          padding-bottom: 2rem;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 2rem;
+          background-color: #ffffff;
+          border-bottom: 1px solid #e2e8f0;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+        }
+
+        .nav-left {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
+        }
+
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 700;
+          font-size: 1.25rem;
+          color: #0f172a;
+        }
+
+        .logo-mark {
+          background-color: #1e293b;
+          color: white;
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1rem;
+        }
+
+        .nav-links {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .nav-item {
+          padding: 0.5rem 1rem;
+          border-radius: 9999px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #64748b;
+          text-decoration: none;
+          transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+          color: #0f172a;
+          background-color: #f8fafc;
+        }
+
+        .nav-item.active {
+          background-color: #2563eb;
+          color: white;
+        }
+
+        .nav-right {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+        }
+
+        .nav-search {
+          position: relative;
+          display: flex;
+          align-items: center;
+          width: 280px;
+        }
+
+        .nav-search input {
+          width: 100%;
+          padding: 0.5rem 1rem 0.5rem 2.5rem;
+          border-radius: 9999px;
+          border: 1px solid #e2e8f0;
+          background-color: #f8fafc;
+          font-size: 0.875rem;
+        }
+
+        .nav-search .search-icon {
+          position: absolute;
+          left: 0.75rem;
+          color: #94a3b8;
+          width: 16px;
+          height: 16px;
+        }
+
+        .icon-btn {
+          background: none;
+          border: none;
+          color: #64748b;
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+
+        .icon-btn::after {
+          content: '';
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          width: 6px;
+          height: 6px;
+          background-color: #ef4444;
+          border-radius: 50%;
+          border: 2px solid white;
+        }
+
+        .icon-btn:hover {
+          background-color: #f1f5f9;
+          color: #0f172a;
+        }
+
+        .user-profile {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .user-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          overflow: hidden;
+          background-color: #e2e8f0;
+        }
+
+        .user-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .user-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .user-name {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #0f172a;
+          line-height: 1.2;
+        }
+
+        .user-role {
+          font-size: 0.75rem;
+          color: #64748b;
+        }
+
+        /* Main Content */
+        .main-content {
+          padding: 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 2rem;
+        }
+
+        .page-title {
+          font-size: 2rem;
+          font-weight: 600;
+          color: #0f172a;
+          margin-bottom: 0.25rem;
+          letter-spacing: -0.02em;
+        }
+
+        .page-subtitle {
+          color: #64748b;
+          font-size: 0.875rem;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .btn-outline {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.6rem 1.25rem;
+          background-color: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+          background-color: #f8fafc;
+          color: #0f172a;
+        }
+
+        .btn-solid {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.6rem 1.25rem;
+          background-color: #2563eb;
+          border: none;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: white;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .btn-solid:hover {
+          background-color: #1d4ed8;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+          background-color: white;
+          border-radius: 1rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          border: 1px solid #e2e8f0;
+        }
+
+        .kpi-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+
+        .kpi-title {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .kpi-icon {
+          padding: 0.4rem;
+          border-radius: 0.5rem;
+        }
+
+        .icon-blue { background-color: #eff6ff; color: #2563eb; }
+        .icon-orange { background-color: #fff7ed; color: #f97316; }
+        .icon-purple { background-color: #f3e8ff; color: #9333ea; }
+
+        .kpi-value {
+          font-size: 2rem;
+          font-weight: 600;
+          color: #0f172a;
+          margin-bottom: 0.75rem;
+          line-height: 1;
+        }
+
+        .kpi-footer {
+          font-size: 0.8rem;
+          color: #64748b;
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+        
+        .text-green { color: #16a34a; font-weight: 500; }
+        .text-orange { color: #f97316; font-weight: 500; }
+        .text-red { color: #ef4444; font-weight: 500; }
+
+        /* Main Table Panel */
+        .panel-card {
+          background-color: white;
+          border-radius: 1rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          border: 1px solid #e2e8f0;
+        }
+
+        .panel-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #0f172a;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .panel-controls {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .table-search {
+          position: relative;
+          width: 250px;
+        }
+
+        .table-search input {
+          width: 100%;
+          padding: 0.5rem 1rem 0.5rem 2.25rem;
+          border-radius: 0.5rem;
+          border: 1px solid #e2e8f0;
+          background-color: #f8fafc;
+          font-size: 0.875rem;
+        }
+
+        .table-search .search-icon {
+          position: absolute;
+          left: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #94a3b8;
+        }
+
+        .table-select {
+          padding: 0.5rem 2rem 0.5rem 1rem;
+          border-radius: 0.5rem;
+          border: 1px solid #e2e8f0;
+          background-color: white;
+          font-size: 0.875rem;
+          color: #475569;
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 0.5rem center;
+          background-size: 1em;
+          cursor: pointer;
+        }
+
+        /* Table Styles */
+        .table-container {
+          width: 100%;
+          overflow-x: auto;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+        }
+        
+        th {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 1rem 0.5rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        td {
+          padding: 1.25rem 0.5rem;
+          border-bottom: 1px solid #f1f5f9;
+          vertical-align: middle;
+        }
+
+        .med-cell {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .med-icon-wrapper {
+          width: 32px;
+          height: 32px;
+          background-color: #eff6ff;
+          color: #2563eb;
+          border-radius: 0.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .med-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .med-name {
+          font-weight: 600;
+          color: #0f172a;
+          font-size: 0.875rem;
+        }
+
+        .med-type {
+          font-size: 0.75rem;
+          color: #64748b;
+        }
+
+        .text-regular {
+          font-size: 0.875rem;
+          color: #475569;
+        }
+        
+        .text-bold {
+          font-weight: 600;
+          color: #0f172a;
+          font-size: 0.875rem;
+        }
+
+        .batch-id {
+          font-family: monospace;
+          color: #64748b;
+          font-size: 0.875rem;
+        }
+
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+
+        .badge-instock {
+          background-color: #eff6ff;
+          color: #2563eb;
+        }
+
+        .badge-lowstock {
+          background-color: #fff7ed;
+          color: #f97316;
+        }
+        
+        .val-orange {
+          color: #f97316;
+          font-weight: 600;
+        }
+
+        .action-btn {
+          background: none;
+          border: none;
+          color: #94a3b8;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .action-btn:hover {
+          color: #0f172a;
+        }
+
+        /* Pagination */
+        .table-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: 1.5rem;
+          margin-top: 0.5rem;
+        }
+
+        .showing-text {
+          font-size: 0.875rem;
+          color: #64748b;
+        }
+
+        .pagination {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .page-btn {
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.375rem;
+          background: none;
+          border: none;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #475569;
+          cursor: pointer;
+        }
+
+        .page-btn:hover:not(.active) {
+          background-color: #f1f5f9;
+        }
+
+        .page-btn.active {
+          background-color: #2563eb;
+          color: white;
+        }
+
+        /* Bottom Footer */
+        .bottom-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 2rem;
+          font-size: 0.75rem;
+          color: #64748b;
+          border-top: 1px solid #e2e8f0;
+          margin-top: 2rem;
+        }
+
+        .footer-left {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .footer-dot {
+          width: 6px;
+          height: 6px;
+          background-color: #10b981;
+          border-radius: 50%;
+        }
+
+        .footer-right {
+          display: flex;
+          gap: 1.5rem;
+        }
+      `}</style>
+
+      <div className="batch-container">
+        {/* Top Navigation */}
+        <nav className="top-nav">
+          <div className="nav-left">
+            <div className="brand">
+              <div className="logo-mark">M</div>
+              <span>MedStock</span>
+            </div>
+            <div className="nav-links">
+              <a href="/dashboard" className="nav-item">Dashboard</a>
+              <a href="#" className="nav-item active">Stock</a>
+              <a href="#" className="nav-item">Batches</a>
+              <a href="#" className="nav-item">Medicines</a>
+              <a href="#" className="nav-item">Orders</a>
+            </div>
+          </div>
+
+          <div className="nav-right">
+            <div className="nav-search">
+              <Search className="search-icon" />
+              <input type="text" placeholder="Search medicines, NDC, batch..." />
+            </div>
+            <button className="icon-btn">
+              <Bell size={20} />
+            </button>
+            <div className="user-profile">
+              <div className="user-avatar">
+                {/* Generic placeholder for user image */}
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80" alt="User" />
+              </div>
+              <div className="user-info">
+                <span className="user-name">PG</span>
+                <span className="user-role">Lead Pharmacist</span>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <main className="main-content">
+
+          {/* Header */}
+          <header className="page-header">
+            <div>
+              <h1 className="page-title">Stock Inventory</h1>
+              <p className="page-subtitle">Manage and track your current clinic and pharmacy stock levels.</p>
+            </div>
+            <div className="header-actions">
+              <button className="btn-outline">
+                <Download size={16} /> Export Report
+              </button>
+              <button className="btn-solid">
+                <Plus size={16} /> Add Stock Item
+              </button>
+            </div>
+          </header>
+
+          {/* KPI Cards */}
+          <div className="kpi-grid">
+            <div className="kpi-card">
+              <div className="kpi-header">
+                <span className="kpi-title">Total Stock Value</span>
+                <div className="kpi-icon icon-blue"><Activity size={18} /></div>
+              </div>
+              <div className="kpi-value">₹1,48,520</div>
+              <div className="kpi-footer">
+                <TrendingUp size={14} className="text-green" />
+                <span className="text-green">+8% this month</span>
+              </div>
+            </div>
+
+            <div className="kpi-card">
+              <div className="kpi-header">
+                <span className="kpi-title">Total Items in Stock</span>
+                <div className="kpi-icon icon-blue"><Package size={18} /></div>
+              </div>
+              <div className="kpi-value">342</div>
+              <div className="kpi-footer">
+                <TrendingUp size={14} className="text-green" />
+                <span className="text-green">+12% this month</span>
+              </div>
+            </div>
+
+            <div className="kpi-card">
+              <div className="kpi-header">
+                <span className="kpi-title">Low Stock Items</span>
+                <div className="kpi-icon icon-orange"><AlertTriangle size={18} /></div>
+              </div>
+              <div className="kpi-value">18</div>
+              <div className="kpi-footer">
+                <AlertTriangle size={14} className="text-orange" />
+                <span className="text-orange">Needs attention</span>
+              </div>
+            </div>
+
+            <div className="kpi-card">
+              <div className="kpi-header">
+                <span className="kpi-title">Expiring Soon</span>
+                <div className="kpi-icon icon-blue"><Calendar size={18} /></div>
+              </div>
+              <div className="kpi-value">12</div>
+              <div className="kpi-footer">
+                <Clock size={14} className="text-red" />
+                <span className="text-red">Within 30 days</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Stock Table Panel */}
+          <div className="panel-card">
+            <div className="panel-header">
+              <h2 className="panel-title">
+                <LayoutGrid size={20} color="#2563eb" /> Current Stock
+              </h2>
+              <div className="panel-controls">
+                <div className="table-search">
+                  <Search size={16} className="search-icon" />
+                  <input type="text" placeholder="Search medicine..." />
+                </div>
+                <select className="table-select">
+                  <option>All Categories</option>
+                  <option>Pain Relief</option>
+                  <option>Antibiotic</option>
+                </select>
+                <select className="table-select">
+                  <option>All Stock Status</option>
+                  <option>In Stock</option>
+                  <option>Low Stock</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Medicine Name</th>
+                    <th>Category</th>
+                    <th>Batch No.</th>
+                    <th>Expiry Date</th>
+                    <th style={{ textAlign: 'center' }}>Current Stock</th>
+                    <th style={{ textAlign: 'center' }}>Min Stock</th>
+                    <th style={{ textAlign: 'center' }}>Status</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  {/* Row 1 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><Pill size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Paracetamol 500mg</span>
+                          <span className="med-type">Oral Tablet</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Pain Relief</td>
+                    <td className="batch-id">PC1001</td>
+                    <td className="text-regular">2026-08-15</td>
+                    <td className="text-bold" style={{ textAlign: 'center' }}>120</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>20</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                  {/* Row 2 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><Beaker size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Amoxicillin 250mg</span>
+                          <span className="med-type">Oral Capsule</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Antibiotic</td>
+                    <td className="batch-id">AMX002</td>
+                    <td className="text-regular">2026-06-10</td>
+                    <td className="text-bold val-orange" style={{ textAlign: 'center' }}>8</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>20</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-lowstock">Low Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                  {/* Row 3 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><Droplets size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Vitamin D3</span>
+                          <span className="med-type">Softgel</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Supplements</td>
+                    <td className="batch-id">VIT003</td>
+                    <td className="text-regular">2026-12-01</td>
+                    <td className="text-bold" style={{ textAlign: 'center' }}>45</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>10</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                  {/* Row 4 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><FileText size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Metformin 500mg</span>
+                          <span className="med-type">Oral Tablet</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Diabetes</td>
+                    <td className="batch-id">MET001</td>
+                    <td className="text-regular">2027-01-20</td>
+                    <td className="text-bold" style={{ textAlign: 'center' }}>200</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>50</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                  {/* Row 5 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><Pill size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Azithromycin 250mg</span>
+                          <span className="med-type">Suspension</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Antibiotic</td>
+                    <td className="batch-id">AZI005</td>
+                    <td className="text-regular">2026-07-10</td>
+                    <td className="text-bold val-orange" style={{ textAlign: 'center' }}>15</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>20</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-lowstock">Low Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                  {/* Row 6 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><Pill size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Cetirizine 10mg</span>
+                          <span className="med-type">Oral Tablet</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Allergy</td>
+                    <td className="batch-id">CET006</td>
+                    <td className="text-regular">2026-05-30</td>
+                    <td className="text-bold" style={{ textAlign: 'center' }}>30</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>15</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                  {/* Row 7 */}
+                  <tr>
+                    <td>
+                      <div className="med-cell">
+                        <div className="med-icon-wrapper"><Activity size={16} /></div>
+                        <div className="med-info">
+                          <span className="med-name">Omeprazole 20mg</span>
+                          <span className="med-type">Delayed Release</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-regular">Gastro</td>
+                    <td className="batch-id">OME007</td>
+                    <td className="text-regular">2026-11-14</td>
+                    <td className="text-bold" style={{ textAlign: 'center' }}>180</td>
+                    <td className="text-regular" style={{ textAlign: 'center' }}>40</td>
+                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button className="action-btn"><MoreHorizontal size={18} /></button>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+            <div className="table-footer">
+              <div className="showing-text">Showing 1-7 of 342 medicines</div>
+              <div className="pagination">
+                <button className="page-btn"><ChevronLeft size={16} /></button>
+                <button className="page-btn active">1</button>
+                <button className="page-btn">2</button>
+                <button className="page-btn">3</button>
+                <button className="page-btn">4</button>
+                <button className="page-btn">5</button>
+                <button className="page-btn"><ChevronRight size={16} /></button>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="bottom-footer">
+          <div className="footer-left">
+            <span>MedStock Clinical Systems v2.4</span>
+            <span style={{ color: '#cbd5e1' }}>•</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}>
+              <span className="footer-dot"></span> DEA / FDA Compliant Audit Trail
+            </span>
+          </div>
+          <div className="footer-right">
+            <span>Protocols & Formulary</span>
+            <span>Dispensary Support</span>
+            <span>© 2024 MedStock Health Tech Inc.</span>
+          </div>
+        </footer>
+      </div>
+    </>
+  );
+};
+
+export default Stock;

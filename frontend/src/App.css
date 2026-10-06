@@ -1,0 +1,556 @@
+:root {
+  --med-bg-white: #ffffff;
+  --med-bg-gray: #dbe3f5;
+  --med-text-dark: #0f172a;
+  --med-text-gray: #475569;
+  --med-text-light: #64748b;
+  --med-primary: #2563eb;
+  --med-primary-hover: #1d4ed8;
+  --med-primary-light: #e0e7ff;
+  --med-border: #cbd5e1;
+  --med-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --med-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --med-radius-md: 0.5rem;
+  --med-radius-lg: 1rem;
+  --med-radius-xl: 1.5rem;
+  --med-font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.medstock-container {
+  width: 100%;
+  overflow-x: hidden;
+  font-family: var(--med-font) !important;
+  color: var(--med-text-gray) !important;
+  background-color: var(--med-bg-gray);
+  line-height: 1.5;
+  text-align: left;
+}
+
+.medstock-container h1, 
+.medstock-container h2, 
+.medstock-container h3, 
+.medstock-container h4, 
+.medstock-container h5, 
+.medstock-container h6 {
+  color: var(--med-text-dark) !important;
+  margin-top: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.medstock-container a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Navbar */
+.medstock-container .navbar {
+  background-color: var(--med-bg-gray);
+  padding: 1.25rem 2rem;
+}
+
+.medstock-container .nav-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.medstock-container .logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.medstock-container .logo-icon {
+  background-color: var(--med-primary-light);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medstock-container .logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--med-text-dark);
+  letter-spacing: -0.025em;
+}
+
+.medstock-container .nav-links {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.medstock-container .nav-links a {
+  color: var(--med-text-gray);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.medstock-container .nav-links a:hover {
+  color: var(--med-text-dark);
+}
+
+.medstock-container .nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.medstock-container .login-btn {
+  font-weight: 500;
+  color: var(--med-text-dark);
+  font-size: 0.95rem;
+}
+
+.medstock-container .signup-btn {
+  background-color: var(--med-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.medstock-container .signup-btn:hover {
+  background-color: var(--med-primary-hover);
+}
+
+.medstock-container .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%239ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>');
+  background-size: 24px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Sections */
+.medstock-container .section {
+  padding: 5rem 2rem;
+}
+
+.medstock-container .bg-white { background-color: transparent; }
+.medstock-container .bg-gray { background-color: transparent; }
+
+.medstock-container .section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.medstock-container .section-label {
+  color: var(--med-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.medstock-container .section-title {
+  font-size: 2.5rem;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.5rem;
+}
+
+.medstock-container .section-subtitle {
+  font-size: 1.125rem;
+  color: var(--med-text-gray);
+  line-height: 1.6;
+}
+
+/* Hero Section */
+.medstock-container .hero {
+  background-color: var(--med-bg-gray);
+  padding: 6rem 2rem 8rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.medstock-container .hero::before {
+  content: '';
+  position: absolute;
+  top: -15%;
+  left: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(23, 37, 84, 0.15) 0%, rgba(23, 37, 84, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.medstock-container .hero::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(23, 37, 84, 0.1) 0%, rgba(23, 37, 84, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.medstock-container .hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.medstock-container .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1.25rem;
+  background-color: var(--med-bg-white);
+  border: 1px solid var(--med-border);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--med-primary);
+  letter-spacing: 0.05em;
+  margin-bottom: 2.5rem;
+}
+
+.medstock-container .badge .dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--med-primary);
+  border-radius: 50%;
+}
+
+.medstock-container .hero-title {
+  font-size: 4rem;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  color: #0f172a !important;
+}
+
+.medstock-container .hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--med-text-gray);
+  margin-bottom: 3rem;
+  line-height: 1.6;
+}
+
+.medstock-container .explore-btn {
+  background-color: var(--med-bg-white);
+  color: var(--med-text-dark);
+  border: 1px solid var(--med-border);
+  padding: 0.85rem 2.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--med-shadow-sm);
+}
+
+.medstock-container .explore-btn:hover {
+  background-color: #f8fafc;
+}
+
+/* Grid Layouts */
+.medstock-container .cards-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Cards */
+.medstock-container .card {
+  background-color: #f7f9fd;
+  border-radius: var(--med-radius-xl);
+  padding: 2.5rem;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.medstock-container .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 35px -10px rgba(15, 23, 42, 0.08), 0 10px 15px -8px rgba(15, 23, 42, 0.03);
+  border-color: #f7f9fd;
+}
+
+.medstock-container .card-icon-wrapper {
+  background-color: var(--med-primary-light);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.medstock-container .card-icon {
+  color: var(--med-primary);
+}
+
+.medstock-container .card-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--med-text-dark);
+}
+
+.medstock-container .card-text {
+  color: var(--med-text-dark);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.medstock-container .card-link {
+  color: var(--med-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.medstock-container .card-link:hover .arrow {
+  transform: translateX(4px);
+}
+
+.medstock-container .arrow {
+  transition: transform 0.2s;
+}
+
+/* Features Grid */
+.medstock-container .features-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.medstock-container .features-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.medstock-container .features-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Workflow */
+.medstock-container .workflow-grid {
+  counter-reset: workflow-counter;
+}
+
+.medstock-container .workflow-card {
+  position: relative;
+  background-color: #f7f9fd;
+  border-radius: var(--med-radius-xl);
+  padding: 2.5rem;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: left;
+}
+
+.medstock-container .workflow-card .card-title {
+  color: var(--med-text-dark);
+}
+
+.medstock-container .workflow-card .card-text {
+  color: var(--med-text-dark);
+}
+
+.medstock-container .workflow-card:hover {
+  box-shadow: none;
+}
+
+.medstock-container .step-number {
+  background-color: var(--med-primary);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+}
+
+/* CTA Section */
+.medstock-container .cta-section {
+  padding: 6rem 2rem;
+}
+
+.medstock-container .cta-box {
+  background-color: #f7f9fd;
+  border-radius: 2rem;
+  padding: 5rem 2rem;
+  text-align: center;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.medstock-container .cta-title {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  color: var(--med-text-dark) !important;
+}
+
+.medstock-container .cta-text {
+  font-size: 1.125rem;
+  margin-bottom: 3rem;
+  color: var(--med-text-dark);
+  line-height: 1.6;
+}
+
+.medstock-container .cta-btn {
+  background-color: var(--med-primary);
+  color: white;
+  border: none;
+  padding: 1rem 3.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.medstock-container .cta-btn:hover {
+  background-color: var(--med-primary-hover);
+}
+
+.medstock-container .cta-login {
+  font-size: 0.95rem;
+}
+
+.medstock-container .cta-login a {
+  color: var(--med-primary);
+  font-weight: 500;
+}
+
+/* Footer */
+.medstock-container .footer {
+  background-color: var(--med-bg-gray);
+  padding: 5rem 2rem 2rem;
+}
+
+.medstock-container .footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4rem;
+}
+
+.medstock-container .footer-left .logo-container {
+  margin-bottom: 1.5rem;
+}
+
+.medstock-container .footer-desc {
+  font-size: 0.875rem;
+  color: var(--med-text-light);
+  line-height: 1.6;
+}
+
+.medstock-container .footer-links {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.medstock-container .footer-links a {
+  color: var(--med-text-dark);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.medstock-container .footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 1px solid var(--med-border);
+  font-size: 0.875rem;
+  color: var(--med-text-light);
+}
+
+.medstock-container .footer-legal {
+  display: flex;
+  gap: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .medstock-container .cards-grid-3, 
+  .medstock-container .features-row-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .medstock-container .nav-links, 
+  .medstock-container .nav-actions .login-btn, 
+  .medstock-container .nav-actions .avatar {
+    display: none;
+  }
+  
+  .medstock-container .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .medstock-container .section-title {
+    font-size: 2rem;
+  }
+  
+  .medstock-container .cards-grid-3, 
+  .medstock-container .features-row-3, 
+  .medstock-container .features-row-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .medstock-container .footer-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .medstock-container .footer-bottom {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
