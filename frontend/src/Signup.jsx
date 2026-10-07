@@ -1,7 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, User, Mail, Key, Eye, ArrowRight } from 'lucide-react';
+// import api from './api/axios'; // Un-comment when backend is ready
 
 const Signup = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: ''
+  });
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.fullName || !formData.email || !formData.password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    if (!termsAccepted) {
+      setError('You must agree to the Terms of Service.');
+      return;
+    }
+    setError('');
+    
+    // api.post('/signup', formData)
+    //   .then(res => navigate('/dashboard'))
+    //   .catch(err => setError(err.response?.data?.message || 'Signup failed'));
+    
+    // Mock successful signup for now:
+    navigate('/dashboard');
+  };
   return (
     <>
       <style>{`
@@ -443,12 +480,14 @@ const Signup = () => {
               <span>OR SIGN UP WITH EMAIL</span>
             </div>
 
-            <form>
+            {error && <div style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '1rem', textAlign: 'center', backgroundColor: '#fef2f2', padding: '0.5rem', borderRadius: '0.5rem' }}>{error}</div>}
+
+            <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <div className="input-wrapper">
                   <User size={18} className="input-icon" />
-                  <input type="text" className="form-input" placeholder="e.g. Dr. Sarah Jenkins" />
+                  <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="form-input" placeholder="e.g. Dr. Sarah Jenkins" />
                 </div>
               </div>
 
@@ -456,7 +495,7 @@ const Signup = () => {
                 <label className="form-label">Work Email</label>
                 <div className="input-wrapper">
                   <Mail size={18} className="input-icon" />
-                  <input type="email" className="form-input" placeholder="e.g. s.jenkins@healthclinic.org" />
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="form-input" placeholder="e.g. s.jenkins@healthclinic.org" />
                 </div>
               </div>
 
@@ -464,7 +503,7 @@ const Signup = () => {
                 <label className="form-label">Password</label>
                 <div className="input-wrapper">
                   <Key size={18} className="input-icon" />
-                  <input type="password" className="form-input" placeholder="Create a secure password" />
+                  <input type="password" name="password" value={formData.password} onChange={handleChange} className="form-input" placeholder="Create a secure password" />
                   <button type="button" className="input-action">
                     <Eye size={18} />
                   </button>
@@ -472,7 +511,7 @@ const Signup = () => {
               </div>
 
               <div className="checkbox-wrapper">
-                <input type="checkbox" id="terms" className="checkbox" />
+                <input type="checkbox" id="terms" className="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
                 <label htmlFor="terms" className="checkbox-label">
                   I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>
                 </label>

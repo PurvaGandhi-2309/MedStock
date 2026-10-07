@@ -1,7 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Key, Eye, ArrowRight } from 'lucide-react';
+// import api from './api/axios'; // Un-comment when backend is ready
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password.');
+      return;
+    }
+    setError('');
+    
+    // api.post('/login', formData)
+    //   .then(res => navigate('/dashboard'))
+    //   .catch(err => setError(err.response?.data?.message || 'Invalid credentials'));
+    
+    // Mock successful login for now:
+    navigate('/dashboard');
+  };
   return (
     <>
       <style>{`
@@ -408,12 +440,14 @@ const Login = () => {
               <span>OR SIGN IN WITH EMAIL</span>
             </div>
 
-            <form>
+            {error && <div style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '1rem', textAlign: 'center', backgroundColor: '#fef2f2', padding: '0.5rem', borderRadius: '0.5rem' }}>{error}</div>}
+
+            <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">Work Email</label>
                 <div className="input-wrapper">
                   <Mail size={18} className="input-icon" />
-                  <input type="email" className="form-input" placeholder="e.g. s.jenkins@healthclinic.org" />
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="form-input" placeholder="e.g. s.jenkins@healthclinic.org" />
                 </div>
               </div>
 
@@ -421,7 +455,7 @@ const Login = () => {
                 <label className="form-label">Password</label>
                 <div className="input-wrapper">
                   <Key size={18} className="input-icon" />
-                  <input type="password" className="form-input" placeholder="Enter your password" />
+                  <input type="password" name="password" value={formData.password} onChange={handleChange} className="form-input" placeholder="Enter your password" />
                   <button type="button" className="input-action">
                     <Eye size={18} />
                   </button>
@@ -430,7 +464,7 @@ const Login = () => {
 
               <div className="form-actions-row">
                 <div className="checkbox-wrapper">
-                  <input type="checkbox" id="remember" className="checkbox" />
+                  <input type="checkbox" id="remember" className="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                   <label htmlFor="remember" className="checkbox-label">
                     Remember this device
                   </label>

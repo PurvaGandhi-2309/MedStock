@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import { Eye, Clock, TrendingUp, Package, Search, AlertCircle, BarChart2, Shield } from 'lucide-react';
 
 function App() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const observerCallback = (entries, observer) => {
       entries.forEach(entry => {
@@ -44,8 +47,8 @@ function App() {
             <a href="#about">About</a>
           </div>
           <div className="nav-actions">
-            <a href="#login" className="login-btn">Login</a>
-            <button className="signup-btn">Sign Up</button>
+            <Link to="/login" className="login-btn">Login</Link>
+            <button onClick={() => navigate('/signup')} className="signup-btn">Sign Up</button>
             <div className="avatar"></div>
           </div>
         </div>
@@ -69,7 +72,7 @@ function App() {
       </section>
 
       {/* The Problem Section */}
-      <section className="section bg-white">
+      <section id="product" className="section bg-white">
         <div className="section-header">
           <span className="section-label reveal-on-scroll">THE PROBLEM</span>
           <h2 className="section-title reveal-on-scroll">
@@ -117,7 +120,7 @@ function App() {
       </section>
 
       {/* Core Features Section */}
-      <section className="section bg-gray">
+      <section id="features" className="section bg-gray">
         <div className="section-header">
           <span className="section-label reveal-on-scroll">CORE FEATURES</span>
           <h2 className="section-title reveal-on-scroll delay-1">
@@ -184,7 +187,7 @@ function App() {
       </section>
 
       {/* Workflow Section */}
-      <section className="section bg-white">
+      <section id="how-it-works" className="section bg-white">
         <div className="section-header">
           <span className="section-label reveal-on-scroll">WORKFLOW</span>
           <h2 className="section-title reveal-on-scroll delay-1">How MedStock Works</h2>
@@ -223,16 +226,16 @@ function App() {
             Keep your medicines organized, stay ahead of low-stock items, and<br />monitor expiry dates with MedStock.
           </p>
           <div className="reveal-on-scroll delay-2">
-            <button className="cta-btn">Sign Up</button>
+            <button onClick={() => navigate('/signup')} className="cta-btn">Sign Up</button>
             <p className="cta-login">
-              Already have an account? <a href="#login">Login</a>
+              Already have an account? <Link to="/login">Login</Link>
             </p>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="footer">
+      <footer id="about" className="footer">
         <div className="footer-content">
           <div className="footer-left">
             <div className="logo-container">
@@ -252,7 +255,7 @@ function App() {
               <a href="#how-it-works">How it Works</a>
               <a href="#product">Product</a>
               <a href="#about">About</a>
-              <a href="#login">Login</a>
+              <Link to="/login">Login</Link>
             </div>
           </div>
         </div>
