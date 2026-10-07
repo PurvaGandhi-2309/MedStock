@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Key, Eye, ArrowRight } from 'lucide-react';
-// import api from './api/axios'; // Un-comment when backend is ready
-
+import api from './api/axios';
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -27,12 +26,14 @@ const Login = () => {
     }
     setError('');
     
-    // api.post('/login', formData)
-    //   .then(res => navigate('/dashboard'))
-    //   .catch(err => setError(err.response?.data?.message || 'Invalid credentials'));
-    
-    // Mock successful login for now:
-    navigate('/dashboard');
+    api.post('/login', formData)
+      .then(res => {
+        localStorage.setItem("token", res.data.token);
+        navigate('/dashboard');
+      })
+      .catch(err => {
+        setError(err.response?.data?.message || 'Invalid credentials');
+      });
   };
   return (
     <>

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, User, Mail, Key, Eye, ArrowRight } from 'lucide-react';
-// import api from './api/axios'; // Un-comment when backend is ready
-
+import api from './api/axios';
 const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -32,12 +31,24 @@ const Signup = () => {
     }
     setError('');
     
-    // api.post('/signup', formData)
-    //   .then(res => navigate('/dashboard'))
-    //   .catch(err => setError(err.response?.data?.message || 'Signup failed'));
-    
-    // Mock successful signup for now:
-    navigate('/dashboard');
+    const payload = {
+      name: formData.fullName,
+      email: formData.email,
+      password: formData.password
+    };
+
+    api.post('/signup', payload)
+      .then(res => {
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token);
+          navigate('/dashboard');
+        } else {
+          navigate('/login');
+        }
+      })
+      .catch(err => {
+        setError(err.response?.data?.message || 'Signup failed');
+      });
   };
   return (
     <>
