@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Search, Bell, User, Plus, Download,
   Package, LayoutGrid, AlertTriangle, Calendar,
@@ -7,6 +7,16 @@ import {
 } from 'lucide-react';
 
 const Stock = () => {
+  const [stockData, setStockData] = useState({
+    kpis: {
+      totalValue: "₹0",
+      totalItems: 0,
+      lowStock: 0,
+      expiring: 0
+    },
+    inventory: []
+  });
+
   return (
     <>
       <style>{`
@@ -635,10 +645,10 @@ const Stock = () => {
                 <span className="kpi-title">Total Stock Value</span>
                 <div className="kpi-icon icon-blue"><Activity size={18} /></div>
               </div>
-              <div className="kpi-value">₹1,48,520</div>
+              <div className="kpi-value">{stockData.kpis.totalValue}</div>
               <div className="kpi-footer">
                 <TrendingUp size={14} className="text-green" />
-                <span className="text-green">+8% this month</span>
+                <span className="text-green">+0% this month</span>
               </div>
             </div>
 
@@ -647,10 +657,10 @@ const Stock = () => {
                 <span className="kpi-title">Total Items in Stock</span>
                 <div className="kpi-icon icon-blue"><Package size={18} /></div>
               </div>
-              <div className="kpi-value">342</div>
+              <div className="kpi-value">{stockData.kpis.totalItems}</div>
               <div className="kpi-footer">
                 <TrendingUp size={14} className="text-green" />
-                <span className="text-green">+12% this month</span>
+                <span className="text-green">+0% this month</span>
               </div>
             </div>
 
@@ -659,7 +669,7 @@ const Stock = () => {
                 <span className="kpi-title">Low Stock Items</span>
                 <div className="kpi-icon icon-orange"><AlertTriangle size={18} /></div>
               </div>
-              <div className="kpi-value">18</div>
+              <div className="kpi-value">{stockData.kpis.lowStock}</div>
               <div className="kpi-footer">
                 <AlertTriangle size={14} className="text-orange" />
                 <span className="text-orange">Needs attention</span>
@@ -671,7 +681,7 @@ const Stock = () => {
                 <span className="kpi-title">Expiring Soon</span>
                 <div className="kpi-icon icon-blue"><Calendar size={18} /></div>
               </div>
-              <div className="kpi-value">12</div>
+              <div className="kpi-value">{stockData.kpis.expiring}</div>
               <div className="kpi-footer">
                 <Clock size={14} className="text-red" />
                 <span className="text-red">Within 30 days</span>
@@ -719,159 +729,28 @@ const Stock = () => {
                 </thead>
                 <tbody>
 
-                  {/* Row 1 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><Pill size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Paracetamol 500mg</span>
-                          <span className="med-type">Oral Tablet</span>
+                  {stockData.inventory.map((item, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div className="med-cell">
+                          <div className="med-icon-wrapper"><Pill size={16} /></div>
+                          <div className="med-info">
+                            <span className="med-name">{item.name}</span>
+                            <span className="med-type">{item.type}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Pain Relief</td>
-                    <td className="batch-id">PC1001</td>
-                    <td className="text-regular">2026-08-15</td>
-                    <td className="text-bold" style={{ textAlign: 'center' }}>120</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>20</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 2 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><Beaker size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Amoxicillin 250mg</span>
-                          <span className="med-type">Oral Capsule</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Antibiotic</td>
-                    <td className="batch-id">AMX002</td>
-                    <td className="text-regular">2026-06-10</td>
-                    <td className="text-bold val-orange" style={{ textAlign: 'center' }}>8</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>20</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-lowstock">Low Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 3 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><Droplets size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Vitamin D3</span>
-                          <span className="med-type">Softgel</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Supplements</td>
-                    <td className="batch-id">VIT003</td>
-                    <td className="text-regular">2026-12-01</td>
-                    <td className="text-bold" style={{ textAlign: 'center' }}>45</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>10</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 4 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><FileText size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Metformin 500mg</span>
-                          <span className="med-type">Oral Tablet</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Diabetes</td>
-                    <td className="batch-id">MET001</td>
-                    <td className="text-regular">2027-01-20</td>
-                    <td className="text-bold" style={{ textAlign: 'center' }}>200</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>50</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 5 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><Pill size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Azithromycin 250mg</span>
-                          <span className="med-type">Suspension</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Antibiotic</td>
-                    <td className="batch-id">AZI005</td>
-                    <td className="text-regular">2026-07-10</td>
-                    <td className="text-bold val-orange" style={{ textAlign: 'center' }}>15</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>20</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-lowstock">Low Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 6 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><Pill size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Cetirizine 10mg</span>
-                          <span className="med-type">Oral Tablet</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Allergy</td>
-                    <td className="batch-id">CET006</td>
-                    <td className="text-regular">2026-05-30</td>
-                    <td className="text-bold" style={{ textAlign: 'center' }}>30</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>15</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 7 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon-wrapper"><Activity size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Omeprazole 20mg</span>
-                          <span className="med-type">Delayed Release</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-regular">Gastro</td>
-                    <td className="batch-id">OME007</td>
-                    <td className="text-regular">2026-11-14</td>
-                    <td className="text-bold" style={{ textAlign: 'center' }}>180</td>
-                    <td className="text-regular" style={{ textAlign: 'center' }}>40</td>
-                    <td style={{ textAlign: 'center' }}><span className="badge badge-instock">In Stock</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn"><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="text-regular">{item.category}</td>
+                      <td className="batch-id">{item.batch}</td>
+                      <td className="text-regular">{item.expiry}</td>
+                      <td className={`text-bold ${item.status === 'Low Stock' ? 'val-orange' : ''}`} style={{ textAlign: 'center' }}>{item.currentStock}</td>
+                      <td className="text-regular" style={{ textAlign: 'center' }}>{item.minStock}</td>
+                      <td style={{ textAlign: 'center' }}><span className={`badge ${item.status === 'In Stock' ? 'badge-instock' : 'badge-lowstock'}`}>{item.status}</span></td>
+                      <td style={{ textAlign: 'center' }}>
+                        <button className="action-btn"><MoreHorizontal size={18} /></button>
+                      </td>
+                    </tr>
+                  ))}
 
                 </tbody>
               </table>

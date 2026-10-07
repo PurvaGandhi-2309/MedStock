@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Search, Bell, Filter, Download,
   ArrowRightLeft, RefreshCw, Calendar, Tag, Package,
@@ -7,6 +7,16 @@ import {
 } from 'lucide-react';
 
 const Transactions = () => {
+  const [transactionData, setTransactionData] = useState({
+    kpis: {
+      total: 0,
+      stockIn: 0,
+      stockOut: 0,
+      adjustments: 0
+    },
+    ledger: []
+  });
+
   return (
     <>
       <style>{`
@@ -757,9 +767,9 @@ const Transactions = () => {
                 <div className="kpi-icon icon-blue-light"><TrendingUp size={16} /></div>
               </div>
               <div>
-                <div className="kpi-value">124</div>
+                <div className="kpi-value">{transactionData.kpis.total}</div>
                 <div className="kpi-footer">
-                  <span className="text-blue">↗ +12% from last week</span>
+                  <span className="text-blue">↗ +0% from last week</span>
                 </div>
               </div>
             </div>
@@ -770,9 +780,9 @@ const Transactions = () => {
                 <div className="kpi-icon icon-blue-light"><ArrowDownToLine size={16} /></div>
               </div>
               <div>
-                <div className="kpi-value">42</div>
+                <div className="kpi-value">{transactionData.kpis.stockIn}</div>
                 <div className="kpi-footer">
-                  <span className="text-blue">↗ +12% from last week</span>
+                  <span className="text-blue">↗ +0% from last week</span>
                 </div>
               </div>
             </div>
@@ -783,9 +793,9 @@ const Transactions = () => {
                 <div className="kpi-icon icon-blue-light"><ShoppingCart size={16} /></div>
               </div>
               <div>
-                <div className="kpi-value">76</div>
+                <div className="kpi-value">{transactionData.kpis.stockOut}</div>
                 <div className="kpi-footer">
-                  <span className="text-blue">↗ +22% from last week</span>
+                  <span className="text-blue">↗ +0% from last week</span>
                 </div>
               </div>
             </div>
@@ -796,7 +806,7 @@ const Transactions = () => {
                 <div className="kpi-icon icon-gray-light"><Settings2 size={16} /></div>
               </div>
               <div>
-                <div className="kpi-value">6</div>
+                <div className="kpi-value">{transactionData.kpis.adjustments}</div>
                 <div className="kpi-footer">
                   <span>✔ Audit verified</span>
                 </div>
@@ -832,180 +842,31 @@ const Transactions = () => {
                 </thead>
                 <tbody>
                   
-                  {/* Row 1 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 27, 2025 10:24 AM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Paracetamol 500mg</span>
-                        <span className="med-desc">Tablet • Strip of 10</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-sale">Sale</span></td>
-                    <td className="qty-sale" style={{textAlign: 'right'}}>-10</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹5.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹50.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar">P</div>
-                        <span>Pharmacist</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Walk-in sale</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 2 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 27, 2025 09:12 AM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Amoxicillin 250mg</span>
-                        <span className="med-desc">Capsule • Box of 50</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-stockin">Stock In</span></td>
-                    <td className="qty-stockin" style={{textAlign: 'right'}}>+50</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹12.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹600.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar">A</div>
-                        <span>Admin</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Purchase PO-4928</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 3 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 26, 2025 04:36 PM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Vitamin D3 Softgel</span>
-                        <span className="med-desc">60,000 IU Capsule</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-sale">Sale</span></td>
-                    <td className="qty-sale" style={{textAlign: 'right'}}>-5</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹20.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹100.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar">P</div>
-                        <span>Pharmacist</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Walk-in sale</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 4 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 26, 2025 01:20 PM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Metformin 500mg</span>
-                        <span className="med-desc">Extended Release Tab</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-stockin">Stock In</span></td>
-                    <td className="qty-stockin" style={{textAlign: 'right'}}>+30</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹8.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹240.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar">A</div>
-                        <span>Admin</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Supplier Cipla</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 5 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 25, 2025 11:05 AM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Azithromycin 250mg</span>
-                        <span className="med-desc">Tablet • Strip of 6</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-sale">Sale</span></td>
-                    <td className="qty-sale" style={{textAlign: 'right'}}>-8</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹12.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹96.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar">P</div>
-                        <span>Pharmacist</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Prescription Rx-1044</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 6 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 25, 2025 08:45 AM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Ceftriaxone 1g IV</span>
-                        <span className="med-desc">Sterile Vial for Injection</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-sale">Sale</span></td>
-                    <td className="qty-sale" style={{textAlign: 'right'}}>-4</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹250.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹1,000.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar" style={{backgroundColor: '#e0e7ff', color: '#4f46e5'}}>D</div>
-                        <span>Dispensary</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Inpatient Ward 3</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-                  
-                  {/* Row 7 */}
-                  <tr>
-                    <td style={{color: '#64748b'}}>Apr 24, 2025 03:15 PM</td>
-                    <td>
-                      <div className="med-cell">
-                        <span className="med-name">Insulin Glargine</span>
-                        <span className="med-desc">SoloStar Pen 100IU/ml</span>
-                      </div>
-                    </td>
-                    <td><span className="type-pill pill-adj">Adjustment</span></td>
-                    <td className="qty-adj" style={{textAlign: 'right'}}>-1</td>
-                    <td className="col-price" style={{textAlign: 'right'}}>₹450.00</td>
-                    <td className="col-total" style={{textAlign: 'right'}}>₹450.00</td>
-                    <td>
-                      <div className="user-role-cell">
-                        <div className="role-avatar">P</div>
-                        <span>Pharmacist</span>
-                      </div>
-                    </td>
-                    <td className="remarks-text">Cold-Chain Damaged</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
+                  {transactionData.ledger.map((txn, idx) => (
+                    <tr key={idx}>
+                      <td style={{color: '#64748b'}}>{txn.date}</td>
+                      <td>
+                        <div className="med-cell">
+                          <span className="med-name">{txn.name}</span>
+                          <span className="med-desc">{txn.desc}</span>
+                        </div>
+                      </td>
+                      <td><span className={`type-pill ${txn.typeClass}`}>{txn.type}</span></td>
+                      <td className={txn.qtyClass} style={{textAlign: 'right'}}>{txn.qty}</td>
+                      <td className="col-price" style={{textAlign: 'right'}}>{txn.price}</td>
+                      <td className="col-total" style={{textAlign: 'right'}}>{txn.total}</td>
+                      <td>
+                        <div className="user-role-cell">
+                          <div className="role-avatar" style={txn.avatarStyle}>{txn.avatar}</div>
+                          <span>{txn.role}</span>
+                        </div>
+                      </td>
+                      <td className="remarks-text">{txn.remarks}</td>
+                      <td style={{textAlign: 'center'}}>
+                        <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
+                      </td>
+                    </tr>
+                  ))}
 
                 </tbody>
               </table>
