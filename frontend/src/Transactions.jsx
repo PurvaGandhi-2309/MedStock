@@ -17,6 +17,12 @@ const Transactions = () => {
     ledger: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredLedger = transactionData.ledger.filter(txn =>
+    !searchQuery || JSON.stringify(txn).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
@@ -665,7 +671,12 @@ const Transactions = () => {
             </div>
             <div className="nav-search">
               <Search className="search-icon" />
-              <input type="text" placeholder="Search medicine, NDC, batch..." />
+              <input 
+                type="text" 
+                placeholder="Search medicine, NDC, batch..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
           
@@ -714,7 +725,12 @@ const Transactions = () => {
             <div className="header-actions">
               <div className="global-search">
                 <Search className="search-icon" />
-                <input type="text" placeholder="Search medicine, batch, or transaction ID" />
+                <input 
+                  type="text" 
+                  placeholder="Search medicine, batch, or transaction ID" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <button className="btn-refresh">
                 <RefreshCw size={16} />
@@ -841,32 +857,39 @@ const Transactions = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  
-                  {transactionData.ledger.map((txn, idx) => (
-                    <tr key={idx}>
-                      <td style={{color: '#64748b'}}>{txn.date}</td>
-                      <td>
-                        <div className="med-cell">
-                          <span className="med-name">{txn.name}</span>
-                          <span className="med-desc">{txn.desc}</span>
-                        </div>
-                      </td>
-                      <td><span className={`type-pill ${txn.typeClass}`}>{txn.type}</span></td>
-                      <td className={txn.qtyClass} style={{textAlign: 'right'}}>{txn.qty}</td>
-                      <td className="col-price" style={{textAlign: 'right'}}>{txn.price}</td>
-                      <td className="col-total" style={{textAlign: 'right'}}>{txn.total}</td>
-                      <td>
-                        <div className="user-role-cell">
-                          <div className="role-avatar" style={txn.avatarStyle}>{txn.avatar}</div>
-                          <span>{txn.role}</span>
-                        </div>
-                      </td>
-                      <td className="remarks-text">{txn.remarks}</td>
-                      <td style={{textAlign: 'center'}}>
-                        <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
+                  {filteredLedger.length > 0 ? (
+                    filteredLedger.map((txn, idx) => (
+                      <tr key={idx}>
+                        <td style={{color: '#64748b'}}>{txn.date}</td>
+                        <td>
+                          <div className="med-cell">
+                            <span className="med-name">{txn.name}</span>
+                            <span className="med-desc">{txn.desc}</span>
+                          </div>
+                        </td>
+                        <td><span className={`type-pill ${txn.typeClass}`}>{txn.type}</span></td>
+                        <td className={txn.qtyClass} style={{textAlign: 'right'}}>{txn.qty}</td>
+                        <td className="col-price" style={{textAlign: 'right'}}>{txn.price}</td>
+                        <td className="col-total" style={{textAlign: 'right'}}>{txn.total}</td>
+                        <td>
+                          <div className="user-role-cell">
+                            <div className="role-avatar" style={txn.avatarStyle}>{txn.avatar}</div>
+                            <span>{txn.role}</span>
+                          </div>
+                        </td>
+                        <td className="remarks-text">{txn.remarks}</td>
+                        <td style={{textAlign: 'center'}}>
+                          <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        {searchQuery ? "No matches found." : "No transactions loaded. Database connection pending."}
                       </td>
                     </tr>
-                  ))}
+                  )}
 
                 </tbody>
               </table>

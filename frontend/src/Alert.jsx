@@ -19,6 +19,12 @@ const Alert = () => {
     alertsList: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAlerts = alertData.alertsList.filter(alert =>
+    !searchQuery || JSON.stringify(alert).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
@@ -685,7 +691,12 @@ const Alert = () => {
             <div className="header-actions">
               <div className="global-search">
                 <Search className="search-icon" />
-                <input type="text" placeholder="Search alerts, NDC, medicine, batch..." />
+                <input 
+                  type="text" 
+                  placeholder="Search alerts, NDC, medicine, batch..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <button className="btn-filter">
                 <Filter size={18} />
@@ -772,45 +783,52 @@ const Alert = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  
-                  {alertData.alertsList.map((alert, idx) => (
-                    <tr key={idx}>
-                      <td>
-                        <div className={`type-pill ${alert.typePillClass}`}>
-                          {alert.typeIcon} {alert.type}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="med-cell">
-                          <div className="med-icon" style={alert.iconStyle}>{alert.medIcon}</div>
-                          <div className="med-info">
-                            <span className="med-name">{alert.name}</span>
-                            <span className="med-desc">{alert.desc}</span>
+                  {filteredAlerts.length > 0 ? (
+                    filteredAlerts.map((alert, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <div className={`type-pill ${alert.typePillClass}`}>
+                            {alert.typeIcon} {alert.type}
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="detail-cell">
-                          <div className="detail-text">{alert.detailMain}</div>
-                          {alert.detailSub && <div className="detail-sub">{alert.detailSub}</div>}
-                          {alert.progressClass && <div className="progress-bar"><div className={`progress-fill ${alert.progressClass}`} style={{width: alert.progressWidth}}></div></div>}
-                        </div>
-                      </td>
-                      <td><span className={`priority-badge ${alert.priorityClass}`}>{alert.priority}</span></td>
-                      <td>
-                        <div className="date-cell">
-                          <span className="date-main">{alert.date}</span>
-                          <span className="date-sub">{alert.time}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="action-cell">
-                          <button className={alert.actionBtnClass}>{alert.actionIcon} {alert.actionText}</button>
-                          <button className="action-more"><MoreVertical size={16}/></button>
-                        </div>
+                        </td>
+                        <td>
+                          <div className="med-cell">
+                            <div className="med-icon" style={alert.iconStyle}>{alert.medIcon}</div>
+                            <div className="med-info">
+                              <span className="med-name">{alert.name}</span>
+                              <span className="med-desc">{alert.desc}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="detail-cell">
+                            <div className="detail-text">{alert.detailMain}</div>
+                            {alert.detailSub && <div className="detail-sub">{alert.detailSub}</div>}
+                            {alert.progressClass && <div className="progress-bar"><div className={`progress-fill ${alert.progressClass}`} style={{width: alert.progressWidth}}></div></div>}
+                          </div>
+                        </td>
+                        <td><span className={`priority-badge ${alert.priorityClass}`}>{alert.priority}</span></td>
+                        <td>
+                          <div className="date-cell">
+                            <span className="date-main">{alert.date}</span>
+                            <span className="date-sub">{alert.time}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="action-cell">
+                            <button className={alert.actionBtnClass}>{alert.actionIcon} {alert.actionText}</button>
+                            <button className="action-more"><MoreVertical size={16}/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        {searchQuery ? "No matches found." : "No alerts to display."}
                       </td>
                     </tr>
-                  ))}
+                  )}
 
                 </tbody>
               </table>

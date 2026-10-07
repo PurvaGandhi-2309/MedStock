@@ -50,6 +50,12 @@ const Dashboard = () => {
     aiRecs: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredTransactions = dashboardData.transactions.filter(txn =>
+    !searchQuery || JSON.stringify(txn).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   useEffect(() => {
     // Example: fetch real dashboard data from backend
     // api.get('/dashboard/summary').then(res => {
@@ -608,7 +614,12 @@ const Dashboard = () => {
           <div className="nav-right">
             <div className="nav-search">
               <Search className="search-icon" />
-              <input type="text" placeholder="Search inventory, batch #..." />
+              <input 
+                type="text" 
+                placeholder="Search inventory, batch #..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <button className="icon-btn">
               <Bell size={20} />
@@ -635,7 +646,12 @@ const Dashboard = () => {
             </div>
             <div className="global-search">
               <Search className="search-icon" />
-              <input type="text" placeholder="Search medicine, SKU, batch, or transaction..." />
+              <input 
+                type="text" 
+                placeholder="Search medicine, SKU, batch, or transaction..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </header>
 
@@ -761,18 +777,26 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {dashboardData.transactions.map((txn, index) => (
-                        <tr key={index}>
-                          <td className="tx-id">{txn.id}</td>
-                          <td>
-                            <div className="tx-medicine">{txn.medicine}</div>
-                            <div className="tx-desc">{txn.desc}</div>
+                      {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((txn, index) => (
+                          <tr key={index}>
+                            <td className="tx-id">{txn.id}</td>
+                            <td>
+                              <div className="tx-medicine">{txn.medicine}</div>
+                              <div className="tx-desc">{txn.desc}</div>
+                            </td>
+                            <td><span className={`badge-pill ${txn.typeClass}`}>{txn.type}</span></td>
+                            <td style={{ textAlign: 'right', fontWeight: 600 }}>{txn.amount}</td>
+                            <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>{txn.time}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '1rem', color: '#64748b', fontSize: '0.875rem' }}>
+                            {searchQuery ? "No matching transactions." : "No transactions to display."}
                           </td>
-                          <td><span className={`badge-pill ${txn.typeClass}`}>{txn.type}</span></td>
-                          <td style={{ textAlign: 'right', fontWeight: 600 }}>{txn.amount}</td>
-                          <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>{txn.time}</td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>

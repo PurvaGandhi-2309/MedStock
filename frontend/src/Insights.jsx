@@ -10,6 +10,12 @@ const Insights = () => {
     recommendations: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredRecommendations = insightsData.recommendations.filter(rec =>
+    !searchQuery || JSON.stringify(rec).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
@@ -693,7 +699,12 @@ const Insights = () => {
             <div className="header-actions">
               <div className="global-search">
                 <Search className="search-icon" />
-                <input type="text" placeholder="Search medicine" />
+                <input 
+                  type="text" 
+                  placeholder="Search medicine" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <button className="btn-outline">
                 <RefreshCw size={16} /> Refresh Analysis
@@ -732,27 +743,34 @@ const Insights = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      
-                      {insightsData.recommendations.map((rec, idx) => (
-                        <tr key={idx}>
-                          <td>
-                            <div className="med-cell">
-                              <span className="med-name">{rec.name}</span>
-                              <span className="med-desc">{rec.desc}</span>
-                            </div>
-                          </td>
-                          <td><span className={`qty-pill ${rec.currentQtyClass}`}>{rec.currentQty}</span></td>
-                          <td><span className="qty-pill qty-blue">{rec.recQty}</span></td>
-                          <td>
-                            <div className="reason-cell">
-                              {rec.reasonIcon} {rec.reasonText}
-                            </div>
-                          </td>
-                          <td style={{textAlign: 'right'}}>
-                            <button className="btn-reorder-small">Reorder</button>
+                      {filteredRecommendations.length > 0 ? (
+                        filteredRecommendations.map((rec, idx) => (
+                          <tr key={idx}>
+                            <td>
+                              <div className="med-cell">
+                                <span className="med-name">{rec.name}</span>
+                                <span className="med-desc">{rec.desc}</span>
+                              </div>
+                            </td>
+                            <td><span className={`qty-pill ${rec.currentQtyClass}`}>{rec.currentQty}</span></td>
+                            <td><span className="qty-pill qty-blue">{rec.recQty}</span></td>
+                            <td>
+                              <div className="reason-cell">
+                                {rec.reasonIcon} {rec.reasonText}
+                              </div>
+                            </td>
+                            <td style={{textAlign: 'right'}}>
+                              <button className="btn-reorder-small">Reorder</button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                            {searchQuery ? "No matching recommendations found." : "No AI recommendations currently available."}
                           </td>
                         </tr>
-                      ))}
+                      )}
 
                     </tbody>
                   </table>

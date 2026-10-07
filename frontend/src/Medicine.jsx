@@ -17,6 +17,14 @@ const Medicine = () => {
     medicinesList: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newMedicine, setNewMedicine] = useState({ name: '', sku: '' });
+
+  const filteredMedicines = medicineData.medicinesList.filter(med => 
+    !searchQuery || JSON.stringify(med).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
@@ -582,6 +590,41 @@ const Medicine = () => {
           border-top: 1px solid #e2e8f0;
           margin-top: 2rem;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(15, 23, 42, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+        }
+        .modal-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 1rem;
+          width: 400px;
+          max-width: 90%;
+        }
+        .modal-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+        .modal-input {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.5rem;
+        }
       `}</style>
 
       <div className="medicine-container">
@@ -601,7 +644,12 @@ const Medicine = () => {
             
             <div className="nav-search">
               <Search className="search-icon" />
-              <input type="text" placeholder="Search medicines, NDC, batch..." />
+              <input 
+                type="text" 
+                placeholder="Search medicines, NDC, batch..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
           
@@ -634,7 +682,7 @@ const Medicine = () => {
               <button className="btn-outline">
                 <Download size={16} /> Export CSV / Report
               </button>
-              <button className="btn-solid">
+              <button className="btn-solid" onClick={() => setIsAddModalOpen(true)}>
                 <Plus size={16} /> Add New Medicine
               </button>
             </div>
@@ -721,7 +769,12 @@ const Medicine = () => {
             <div className="search-category-row">
               <div className="large-search">
                 <Search className="search-icon" />
-                <input type="text" placeholder="Search medicine name, generic formulation, SKU, or lot..." />
+                <input 
+                  type="text" 
+                  placeholder="Search medicine name, generic formulation, SKU, or lot..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <div className="category-pills">
                 <div className="cat-pill active">All Stock ({medicineData.kpis.total})</div>
@@ -775,17 +828,28 @@ const Medicine = () => {
                 </tr>
               </thead>
               <tbody>
-                {medicineData.medicinesList.length > 0 ? (
-                  medicineData.medicinesList.map((med, idx) => (
+                {filteredMedicines.length > 0 ? (
+                  filteredMedicines.map((med, idx) => (
                     <tr key={idx}>
-                      {/* Dynamic mapping would go here */}
+                      <td>
+                        <div className="med-name">{med.name}</div>
+                      </td>
+                      <td>{med.sku || 'N/A'}</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td><span className="badge-gray" style={{padding: '0.2rem 0.5rem', borderRadius: '4px'}}>New</span></td>
+                      <td>
+                        <button style={{background:'none', border:'none', color:'#64748b'}}><MoreHorizontal size={16} /></button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td colSpan="8">
                       <div className="empty-state">
-                        No medicines loaded. Database connection pending.
+                        {searchQuery ? "No matches found." : "No medicines loaded. Database connection pending."}
                       </div>
                     </td>
                   </tr>
@@ -827,6 +891,41 @@ const Medicine = () => {
           </div>
         </footer>
       </div>
+
+      {isAddModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Add New Medicine</h3>
+            <input 
+              type="text" 
+              className="modal-input" 
+              placeholder="Medicine Name" 
+              value={newMedicine.name}
+              onChange={(e) => setNewMedicine({...newMedicine, name: e.target.value})}
+            />
+            <input 
+              type="text" 
+              className="modal-input" 
+              placeholder="SKU / Code" 
+              value={newMedicine.sku}
+              onChange={(e) => setNewMedicine({...newMedicine, sku: e.target.value})}
+            />
+            <div className="modal-actions">
+              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+              <button className="btn-solid" onClick={() => {
+                if(newMedicine.name.trim()) {
+                  setMedicineData(prev => ({
+                    ...prev,
+                    medicinesList: [...prev.medicinesList, { name: newMedicine.name, sku: newMedicine.sku, dummy: true }]
+                  }));
+                  setNewMedicine({ name: '', sku: '' });
+                  setIsAddModalOpen(false);
+                }
+              }}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

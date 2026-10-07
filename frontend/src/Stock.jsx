@@ -17,6 +17,13 @@ const Stock = () => {
     inventory: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const filteredInventory = stockData.inventory.filter(item =>
+    !searchQuery || JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
@@ -579,6 +586,41 @@ const Stock = () => {
           display: flex;
           gap: 1.5rem;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(15, 23, 42, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+        }
+        .modal-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 1rem;
+          width: 400px;
+          max-width: 90%;
+        }
+        .modal-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+        .modal-input {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.5rem;
+        }
       `}</style>
 
       <div className="batch-container">
@@ -601,7 +643,12 @@ const Stock = () => {
           <div className="nav-right">
             <div className="nav-search">
               <Search className="search-icon" />
-              <input type="text" placeholder="Search medicines, NDC, batch..." />
+              <input 
+                type="text" 
+                placeholder="Search medicines, NDC, batch..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <button className="icon-btn">
               <Bell size={20} />
@@ -632,7 +679,7 @@ const Stock = () => {
               <button className="btn-outline">
                 <Download size={16} /> Export Report
               </button>
-              <button className="btn-solid">
+              <button className="btn-solid" onClick={() => setIsAddModalOpen(true)}>
                 <Plus size={16} /> Add Stock Item
               </button>
             </div>
@@ -698,7 +745,12 @@ const Stock = () => {
               <div className="panel-controls">
                 <div className="table-search">
                   <Search size={16} className="search-icon" />
-                  <input type="text" placeholder="Search medicine..." />
+                  <input 
+                    type="text" 
+                    placeholder="Search medicine..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
                 <select className="table-select">
                   <option>All Categories</option>
@@ -729,28 +781,36 @@ const Stock = () => {
                 </thead>
                 <tbody>
 
-                  {stockData.inventory.map((item, idx) => (
-                    <tr key={idx}>
-                      <td>
-                        <div className="med-cell">
-                          <div className="med-icon-wrapper"><Pill size={16} /></div>
-                          <div className="med-info">
-                            <span className="med-name">{item.name}</span>
-                            <span className="med-type">{item.type}</span>
+                  {filteredInventory.length > 0 ? (
+                    filteredInventory.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <div className="med-cell">
+                            <div className="med-icon-wrapper"><Pill size={16} /></div>
+                            <div className="med-info">
+                              <span className="med-name">{item.name}</span>
+                              <span className="med-type">{item.type}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="text-regular">{item.category}</td>
-                      <td className="batch-id">{item.batch}</td>
-                      <td className="text-regular">{item.expiry}</td>
-                      <td className={`text-bold ${item.status === 'Low Stock' ? 'val-orange' : ''}`} style={{ textAlign: 'center' }}>{item.currentStock}</td>
-                      <td className="text-regular" style={{ textAlign: 'center' }}>{item.minStock}</td>
-                      <td style={{ textAlign: 'center' }}><span className={`badge ${item.status === 'In Stock' ? 'badge-instock' : 'badge-lowstock'}`}>{item.status}</span></td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button className="action-btn"><MoreHorizontal size={18} /></button>
+                        </td>
+                        <td className="text-regular">{item.category}</td>
+                        <td className="batch-id">{item.batch}</td>
+                        <td className="text-regular">{item.expiry}</td>
+                        <td className={`text-bold ${item.status === 'Low Stock' ? 'val-orange' : ''}`} style={{ textAlign: 'center' }}>{item.currentStock}</td>
+                        <td className="text-regular" style={{ textAlign: 'center' }}>{item.minStock}</td>
+                        <td style={{ textAlign: 'center' }}><span className={`badge ${item.status === 'In Stock' ? 'badge-instock' : 'badge-lowstock'}`}>{item.status}</span></td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button className="action-btn"><MoreHorizontal size={18} /></button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        {searchQuery ? "No matches found." : "No stock loaded. Database connection pending."}
                       </td>
                     </tr>
-                  ))}
+                  )}
 
                 </tbody>
               </table>
@@ -787,6 +847,26 @@ const Stock = () => {
           </div>
         </footer>
       </div>
+      
+      {isAddModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Add Stock Item</h3>
+            <input type="text" className="modal-input" placeholder="Medicine Name" />
+            <input type="text" className="modal-input" placeholder="Batch No" />
+            <div className="modal-actions">
+              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+              <button className="btn-solid" onClick={() => {
+                setStockData(prev => ({
+                  ...prev,
+                  inventory: [...prev.inventory, { name: "New Stock", type: "Tablet", currentStock: 100, minStock: 20, status: 'In Stock' }]
+                }));
+                setIsAddModalOpen(false);
+              }}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

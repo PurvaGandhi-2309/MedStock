@@ -17,6 +17,13 @@ const Batch = () => {
     batchesList: []
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const filteredBatches = batchData.batchesList.filter(batch =>
+    !searchQuery || JSON.stringify(batch).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <style>{`
@@ -637,7 +644,6 @@ const Batch = () => {
           line-height: 1.5;
         }
 
-        /* Bottom Footer */
         .bottom-footer {
           display: flex;
           justify-content: space-between;
@@ -647,6 +653,41 @@ const Batch = () => {
           color: #64748b;
           border-top: 1px solid #e2e8f0;
           margin-top: 2rem;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(15, 23, 42, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+        }
+        .modal-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 1rem;
+          width: 400px;
+          max-width: 90%;
+        }
+        .modal-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+        .modal-input {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.5rem;
         }
       `}</style>
 
@@ -670,7 +711,12 @@ const Batch = () => {
           <div className="nav-right">
             <div className="nav-search">
               <Search className="search-icon" />
-              <input type="text" placeholder="Search medicines, NDC, batch..." />
+              <input 
+                type="text" 
+                placeholder="Search medicines, NDC, batch..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <button className="icon-btn">
               <Bell size={20} />
@@ -706,7 +752,12 @@ const Batch = () => {
             <div className="header-actions">
               <div className="global-search">
                 <Search className="search-icon" />
-                <input type="text" placeholder="Search medicine, batch number..." />
+                <input 
+                  type="text" 
+                  placeholder="Search medicine, batch number..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <button className="btn-filter">
                 <SlidersHorizontal size={16} />
@@ -764,7 +815,7 @@ const Batch = () => {
                 <div className="protocol-title">Fast Intake Form</div>
                 <div className="protocol-desc">Assign verified NDC, track cold-chain lot codes.</div>
               </div>
-              <button className="btn-solid-full">
+              <button className="btn-solid-full" onClick={() => setIsAddModalOpen(true)}>
                 <Plus size={16} /> Add Batch
               </button>
             </div>
@@ -779,7 +830,12 @@ const Batch = () => {
               <div className="panel-controls">
                 <div className="table-search">
                   <Search className="search-icon" />
-                  <input type="text" placeholder="Search batch or medicine..." />
+                  <input 
+                    type="text" 
+                    placeholder="Search batch or medicine..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
                 <select className="table-select">
                   <option>All Medicines</option>
@@ -809,25 +865,33 @@ const Batch = () => {
                 </thead>
                 <tbody>
 
-                  {batchData.batchesList.map((batch, idx) => (
-                    <tr key={idx}>
-                      <td>
-                        <div className="med-cell">
-                          <Link2 className={`link-icon-${batch.iconColor}`} />
-                          <span>{batch.name}</span>
-                        </div>
-                      </td>
-                      <td>{batch.batchId}</td>
-                      <td>{batch.mfgDate}</td>
-                      <td className={batch.expiryClass}>{batch.expiryDate}</td>
-                      <td className={batch.qtyClass} style={{ fontWeight: 500 }}>{batch.qty}</td>
-                      <td>{batch.supplier}</td>
-                      <td><div className={`status-dot-cell ${batch.statusClass}`}>● {batch.status}</div></td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
+                  {filteredBatches.length > 0 ? (
+                    filteredBatches.map((batch, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <div className="med-cell">
+                            <Link2 className={`link-icon-${batch.iconColor}`} />
+                            <span>{batch.name}</span>
+                          </div>
+                        </td>
+                        <td>{batch.batchId}</td>
+                        <td>{batch.mfgDate}</td>
+                        <td className={batch.expiryClass}>{batch.expiryDate}</td>
+                        <td className={batch.qtyClass} style={{ fontWeight: 500 }}>{batch.qty}</td>
+                        <td>{batch.supplier}</td>
+                        <td><div className={`status-dot-cell ${batch.statusClass}`}>● {batch.status}</div></td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        {searchQuery ? "No matches found." : "No batches loaded. Database connection pending."}
                       </td>
                     </tr>
-                  ))}
+                  )}
 
                 </tbody>
               </table>
@@ -858,6 +922,26 @@ const Batch = () => {
           </div>
         </footer>
       </div>
+
+      {isAddModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Add New Batch</h3>
+            <input type="text" className="modal-input" placeholder="Batch ID" />
+            <input type="text" className="modal-input" placeholder="Medicine Name" />
+            <div className="modal-actions">
+              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+              <button className="btn-solid" onClick={() => {
+                setBatchData(prev => ({
+                  ...prev,
+                  batchesList: [...prev.batchesList, { name: "New Batch", batchId: "NEW-123", statusClass: "s-green", status: "Active" }]
+                }));
+                setIsAddModalOpen(false);
+              }}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
