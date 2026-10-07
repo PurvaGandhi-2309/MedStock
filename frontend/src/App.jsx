@@ -1,8 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import { Eye, Clock, TrendingUp, Package, Search, AlertCircle, BarChart2, Shield } from 'lucide-react';
 
 function App() {
+  useEffect(() => {
+    const observerCallback = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-slide-up');
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const elements = document.querySelectorAll('.reveal-on-scroll');
+    
+    elements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="medstock-container">
       {/* Navigation */}
@@ -31,28 +54,28 @@ function App() {
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
-          <div className="badge">
+          <div className="badge animate-slide-up">
             <span className="dot"></span>
             PHARMACY INVENTORY PLATFORM
           </div>
-          <h1 className="hero-title">
+          <h1 className="hero-title animate-slide-up delay-1">
             Simple and complete pharmacy<br />stock control
           </h1>
-          <p className="hero-subtitle">
+          <p className="hero-subtitle animate-slide-up delay-2">
             Track every batch, expiry date, and reorder level in one place, so shelves never<br />run empty.
           </p>
-          <button className="explore-btn">Explore features</button>
+          <button className="explore-btn animate-slide-up delay-3">Explore features</button>
         </div>
       </section>
 
       {/* The Problem Section */}
       <section className="section bg-white">
         <div className="section-header">
-          <span className="section-label">THE PROBLEM</span>
-          <h2 className="section-title">
+          <span className="section-label reveal-on-scroll">THE PROBLEM</span>
+          <h2 className="section-title reveal-on-scroll">
             Managing medicine inventory should not<br />be complicated.
           </h2>
-          <p className="section-subtitle">
+          <p className="section-subtitle reveal-on-scroll delay-1">
             Pharmacies handle many medicines, batches and stock movements every day. Without a<br />
             clear inventory system, it can become difficult to know what is available, what needs to be<br />
             reordered, and which medicines are approaching their expiry date.
@@ -96,8 +119,8 @@ function App() {
       {/* Core Features Section */}
       <section className="section bg-gray">
         <div className="section-header">
-          <span className="section-label">CORE FEATURES</span>
-          <h2 className="section-title">
+          <span className="section-label reveal-on-scroll">CORE FEATURES</span>
+          <h2 className="section-title reveal-on-scroll delay-1">
             Everything you need to manage pharmacy<br />inventory
           </h2>
         </div>
@@ -163,8 +186,8 @@ function App() {
       {/* Workflow Section */}
       <section className="section bg-white">
         <div className="section-header">
-          <span className="section-label">WORKFLOW</span>
-          <h2 className="section-title">How MedStock Works</h2>
+          <span className="section-label reveal-on-scroll">WORKFLOW</span>
+          <h2 className="section-title reveal-on-scroll delay-1">How MedStock Works</h2>
         </div>
 
         <div className="cards-grid-3 workflow-grid">
@@ -195,14 +218,16 @@ function App() {
       {/* CTA Section */}
       <section className="section bg-gray cta-section">
         <div className="cta-box">
-          <h2 className="cta-title">Take control of your medicine<br />inventory.</h2>
-          <p className="cta-text">
+          <h2 className="cta-title reveal-on-scroll">Take control of your medicine<br />inventory.</h2>
+          <p className="cta-text reveal-on-scroll delay-1">
             Keep your medicines organized, stay ahead of low-stock items, and<br />monitor expiry dates with MedStock.
           </p>
-          <button className="cta-btn">Sign Up</button>
-          <p className="cta-login">
-            Already have an account? <a href="#login">Login</a>
-          </p>
+          <div className="reveal-on-scroll delay-2">
+            <button className="cta-btn">Sign Up</button>
+            <p className="cta-login">
+              Already have an account? <a href="#login">Login</a>
+            </p>
+          </div>
         </div>
       </section>
 
