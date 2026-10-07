@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import {
   Shield, Search, Bell, User,
   Activity, AlertTriangle, Clock, TrendingUp,
@@ -6,8 +7,56 @@ import {
   ChevronRight, ArrowUpRight, ArrowDownRight,
   Zap, Info, CheckCircle2, ChevronDown, ArrowRight,
 } from 'lucide-react';
+const getPast7Days = () => {
+  const dates = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    const weekStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+    if (i === 0) {
+      dates.push(<span key={i} style={{ fontWeight: 600, color: '#2563eb' }}>Today ({weekStr})</span>);
+    } else {
+      dates.push(<span key={i}>{dayStr} ({weekStr})</span>);
+    }
+  }
+  return dates;
+};
 
 const Dashboard = () => {
+  const [dashboardData, setDashboardData] = useState({
+    user: {
+      name: "Dispensary Pharmacist",
+      location: "Central Hospital Outpatient Pharmacy Unit",
+      lastSync: "4 mins ago",
+      currentTime: new Date().toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    },
+    kpis: {
+      medicines: 0,
+      lowStock: 0,
+      expiring: 0,
+      sales: "₹0",
+      salesPercent: "0%",
+      salesCompare: "vs yesterday (0 orders)"
+    },
+    transactions: [],
+    graph: {
+      pathData: "",
+      points: [],
+      dates: getPast7Days(),
+      stats: { velocity: "0", fulfillment: "0%" }
+    },
+    attentionItems: [],
+    aiRecs: []
+  });
+
+  useEffect(() => {
+    // Example: fetch real dashboard data from backend
+    // api.get('/dashboard/summary').then(res => {
+    //   if(res.data) setDashboardData(res.data);
+    // }).catch(err => console.error("Error fetching dashboard data", err));
+  }, []);
+
   return (
     <>
       <style>{`
@@ -579,10 +628,10 @@ const Dashboard = () => {
               <div className="status-badge">
                 <span className="status-dot"></span>
                 DISPENSARY OPERATIONS ACTIVE
-                <span className="status-time">• Tue, Oct 6, 09:22 PM IST</span>
+                <span className="status-time">• {dashboardData.user.currentTime}</span>
               </div>
-              <h1 className="page-title">Welcome back, Dispensary Pharmacist</h1>
-              <p className="page-subtitle">Central Hospital Outpatient Pharmacy Unit • System synchronized 4 mins ago</p>
+              <h1 className="page-title">Welcome back, {dashboardData.user.name}</h1>
+              <p className="page-subtitle">{dashboardData.user.location} • System synchronized {dashboardData.user.lastSync}</p>
             </div>
             <div className="global-search">
               <Search className="search-icon" />
@@ -597,7 +646,7 @@ const Dashboard = () => {
                 <span className="kpi-title">Medicines</span>
                 <Package className="kpi-icon icon-blue" size={32} />
               </div>
-              <div className="kpi-value">248</div>
+              <div className="kpi-value">{dashboardData.kpis.medicines}</div>
               <div className="kpi-footer">
                 <CheckCircle2 size={12} className="text-green" />
                 <span>Total active cataloged formulations</span>
@@ -609,7 +658,7 @@ const Dashboard = () => {
                 <span className="kpi-title">Low Stock</span>
                 <AlertTriangle className="kpi-icon icon-red" size={32} />
               </div>
-              <div className="kpi-value text-red">12</div>
+              <div className="kpi-value text-red">{dashboardData.kpis.lowStock}</div>
               <div className="kpi-footer">
                 <span className="text-red">●</span>
                 <span>Below safe threshold par level</span>
@@ -621,7 +670,7 @@ const Dashboard = () => {
                 <span className="kpi-title">Expiring</span>
                 <Clock className="kpi-icon icon-orange" size={32} />
               </div>
-              <div className="kpi-value">8</div>
+              <div className="kpi-value">{dashboardData.kpis.expiring}</div>
               <div className="kpi-footer">
                 <span className="text-orange">■ &lt;30 days</span>
                 <span>Batches flagged</span>
@@ -633,11 +682,11 @@ const Dashboard = () => {
                 <span className="kpi-title">Today's Sales</span>
                 <Activity className="kpi-icon icon-blue" size={32} />
               </div>
-              <div className="kpi-value">₹24,500</div>
+              <div className="kpi-value">{dashboardData.kpis.sales}</div>
               <div className="kpi-footer">
                 <TrendingUp size={12} className="text-green" />
-                <span className="text-green">+14.2%</span>
-                <span>vs yesterday (142 orders)</span>
+                <span className="text-green">{dashboardData.kpis.salesPercent}</span>
+                <span>{dashboardData.kpis.salesCompare}</span>
               </div>
             </div>
           </div>
@@ -663,35 +712,27 @@ const Dashboard = () => {
 
                 <div className="chart-area">
                   <svg className="chart-svg" viewBox="0 0 500 150" preserveAspectRatio="none">
-                    <path d="M0,120 Q50,90 100,110 T200,80 T300,100 T400,60 T500,40 L500,150 L0,150 Z" fill="rgba(37,99,235,0.1)" />
-                    <path d="M0,120 Q50,90 100,110 T200,80 T300,100 T400,60 T500,40" fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="4 4" />
-                    <path d="M0,100 Q50,110 100,80 T200,120 T300,70 T400,90 T500,30" fill="none" stroke="#2563eb" strokeWidth="3" />
-                    <circle cx="100" cy="80" r="4" fill="#2563eb" />
-                    <circle cx="200" cy="120" r="4" fill="#2563eb" />
-                    <circle cx="300" cy="70" r="4" fill="#2563eb" />
-                    <circle cx="400" cy="90" r="4" fill="#2563eb" />
-                    <circle cx="500" cy="30" r="4" fill="#2563eb" />
+                    <path d={`${dashboardData.graph.pathData} L500,150 L0,150 Z`} fill="rgba(37,99,235,0.1)" />
+                    <path d={dashboardData.graph.pathData} fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="4 4" />
+                    <path d={dashboardData.graph.pathData.replace(/Q50,90/, 'Q50,110').replace(/100,110/, '100,80').replace(/T200,80/, 'T200,120').replace(/T300,100/, 'T300,70').replace(/T400,60/, 'T400,90').replace(/T500,40/, 'T500,30')} fill="none" stroke="#2563eb" strokeWidth="3" />
+                    {dashboardData.graph.points.map((pt, i) => (
+                      <circle key={i} cx={pt.cx} cy={pt.cy} r="4" fill="#2563eb" />
+                    ))}
                   </svg>
                 </div>
                 <div className="chart-x-axis">
-                  <span>22 Oct (Tue)</span>
-                  <span>23 Oct (Wed)</span>
-                  <span>24 Oct (Thu)</span>
-                  <span>25 Oct (Fri)</span>
-                  <span>26 Oct (Sat)</span>
-                  <span>27 Oct (Sun)</span>
-                  <span style={{ fontWeight: 600, color: '#2563eb' }}>Today (Mon)</span>
+                  {dashboardData.graph.dates}
                 </div>
 
                 <div className="chart-footer">
                   <div style={{ display: 'flex', gap: '3rem' }}>
                     <div className="stat-block">
                       <h4>Dispensary Velocity</h4>
-                      <p>1,842 <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#64748b' }}>units/wk</span></p>
+                      <p>{dashboardData.graph.stats.velocity} <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#64748b' }}>units/wk</span></p>
                     </div>
                     <div className="stat-block">
                       <h4>Avg Fulfillment Rate</h4>
-                      <p>99.2%</p>
+                      <p>{dashboardData.graph.stats.fulfillment}</p>
                     </div>
                   </div>
                   <button className="btn-link">Detailed Ledger <ArrowRight size={16} /></button>
@@ -720,56 +761,18 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="tx-id">TXN-8921</td>
-                        <td>
-                          <div className="tx-medicine">Metformin 850mg</div>
-                          <div className="tx-desc">30 tabs • Dr. Rao Prescr.</div>
-                        </td>
-                        <td><span className="badge-pill badge-blue">Dispensed</span></td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>₹360</td>
-                        <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>10 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td className="tx-id">TXN-8920</td>
-                        <td>
-                          <div className="tx-medicine">Ceftriaxone 1g IV</div>
-                          <div className="tx-desc">5 vials • ICU Ward 3</div>
-                        </td>
-                        <td><span className="badge-pill badge-gray">Inpatient</span></td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>₹1,250</td>
-                        <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>28 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td className="tx-id">TXN-8919</td>
-                        <td>
-                          <div className="tx-medicine">Paracetamol 650mg</div>
-                          <div className="tx-desc">10 strips • OTC Counter</div>
-                        </td>
-                        <td><span className="badge-pill badge-blue">Counter Sale</span></td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>₹450</td>
-                        <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>45 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td className="tx-id">TXN-8918</td>
-                        <td>
-                          <div className="tx-medicine">Atorvastatin 20mg</div>
-                          <div className="tx-desc">60 tabs • Cardiology Clinic</div>
-                        </td>
-                        <td><span className="badge-pill badge-gray">Outpatient</span></td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>₹910</td>
-                        <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>1 hr ago</td>
-                      </tr>
-                      <tr>
-                        <td className="tx-id">TXN-8917</td>
-                        <td>
-                          <div className="tx-medicine">Salbutamol Inhaler</div>
-                          <div className="tx-desc">2 units • Pulmonology Dept</div>
-                        </td>
-                        <td><span className="badge-pill badge-blue">Dispensed</span></td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>₹620</td>
-                        <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>2 hrs ago</td>
-                      </tr>
+                      {dashboardData.transactions.map((txn, index) => (
+                        <tr key={index}>
+                          <td className="tx-id">{txn.id}</td>
+                          <td>
+                            <div className="tx-medicine">{txn.medicine}</div>
+                            <div className="tx-desc">{txn.desc}</div>
+                          </td>
+                          <td><span className={`badge-pill ${txn.typeClass}`}>{txn.type}</span></td>
+                          <td style={{ textAlign: 'right', fontWeight: 600 }}>{txn.amount}</td>
+                          <td style={{ textAlign: 'right', color: '#64748b', fontSize: '0.75rem' }}>{txn.time}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -795,65 +798,27 @@ const Dashboard = () => {
                 </div>
 
                 <div className="attention-list">
-                  <div className="attention-item">
-                    <div className="att-header">
-                      <span className="att-tag tag-red">● Low Stock</span>
-                      <span className="att-meta">Par: 100 units</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <div>
-                        <div className="att-title">Amoxicillin 500mg</div>
-                        <div className="att-desc">Antibiotic Capsules • Rack A-12</div>
+                  {dashboardData.attentionItems.map((item, index) => (
+                    <div className="attention-item" key={index}>
+                      <div className="att-header">
+                        <span className={`att-tag ${item.tagClass}`}>● {item.type}</span>
+                        <span className="att-meta">{item.par}</span>
                       </div>
-                      <div>
-                        <div className="att-value val-red">15</div>
-                        <div style={{ fontSize: '0.65rem', color: '#ef4444', textAlign: 'right' }}>strips left</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div>
+                          <div className="att-title">{item.title}</div>
+                          <div className="att-desc">{item.desc}</div>
+                        </div>
+                        <div>
+                          <div className={`att-value ${item.valueClass}`}>{item.value}</div>
+                          <div style={{ fontSize: '0.65rem', color: item.valueClass === 'val-red' ? '#ef4444' : '#f97316', textAlign: 'right' }}>{item.unit}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="att-action">
-                      <button className="btn-ghost-blue">Reorder Batch <ShoppingCart size={14} /></button>
-                    </div>
-                  </div>
-
-                  <div className="attention-item">
-                    <div className="att-header">
-                      <span className="att-tag tag-orange">■ Expiring Soon</span>
-                      <span className="att-meta">18 days remaining</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <div>
-                        <div className="att-title">Paracetamol 650mg</div>
-                        <div className="att-desc">Batch #B-409 • Expiry Nov 2024</div>
-                      </div>
-                      <div>
-                        <div className="att-value val-orange">40</div>
-                        <div style={{ fontSize: '0.65rem', color: '#f97316', textAlign: 'right' }}>strips at risk</div>
+                      <div className="att-action">
+                        <button className="btn-ghost-blue">{item.action} <ArrowUpRight size={14} /></button>
                       </div>
                     </div>
-                    <div className="att-action">
-                      <button className="btn-ghost-blue">Dispense Priority <ArrowUpRight size={14} /></button>
-                    </div>
-                  </div>
-
-                  <div className="attention-item">
-                    <div className="att-header">
-                      <span className="att-tag tag-red">● Low Stock</span>
-                      <span className="att-meta">Par: 20 pens</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <div>
-                        <div className="att-title">Insulin Glargine</div>
-                        <div className="att-desc">100 U/mL SoloStar • ColdRefrig #2</div>
-                      </div>
-                      <div>
-                        <div className="att-value val-red">4</div>
-                        <div style={{ fontSize: '0.65rem', color: '#ef4444', textAlign: 'right' }}>pens left</div>
-                      </div>
-                    </div>
-                    <div className="att-action">
-                      <button className="btn-ghost-blue">Cold-Chain PO <ShoppingCart size={14} /></button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 <button style={{ width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, marginTop: '1rem' }}>
@@ -871,62 +836,26 @@ const Dashboard = () => {
                   <span style={{ background: '#eff6ff', color: '#2563eb', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>98% Accuracy</span>
                 </div>
 
-                <div className="ai-card">
-                  <div className="ai-header">
-                    <div className="ai-title">Amoxicillin 500mg</div>
-                    <div>
-                      <div className="ai-rec-label">Recommended</div>
-                      <div className="ai-rec-val">+200 units</div>
+                {dashboardData.aiRecs.map((rec, index) => (
+                  <div className="ai-card" key={index}>
+                    <div className="ai-header">
+                      <div className="ai-title">{rec.title}</div>
+                      <div>
+                        <div className="ai-rec-label">Recommended</div>
+                        <div className="ai-rec-val">{rec.recValue}</div>
+                      </div>
+                    </div>
+                    <div className="ai-meta">
+                      <span className={rec.runoutClass}>● {rec.runout}</span>
+                      <span>•</span>
+                      <span>{rec.burnRate}</span>
+                    </div>
+                    <div className="ai-footer">
+                      <span className="ai-vendor">Vendor: {rec.vendor}</span>
+                      <button className="btn-solid-blue">Fast Reorder <Zap size={12} /></button>
                     </div>
                   </div>
-                  <div className="ai-meta">
-                    <span className="text-red">● Rel. Runout: 2 days</span>
-                    <span>•</span>
-                    <span>Burn rate: 42 u/day</span>
-                  </div>
-                  <div className="ai-footer">
-                    <span className="ai-vendor">Vendor: Cipla Healthcare Ltd</span>
-                    <button className="btn-solid-blue">Fast Reorder <Zap size={12} /></button>
-                  </div>
-                </div>
-
-                <div className="ai-card">
-                  <div className="ai-header">
-                    <div className="ai-title">Insulin Glargine</div>
-                    <div>
-                      <div className="ai-rec-label">Recommended</div>
-                      <div className="ai-rec-val">+50 pens</div>
-                    </div>
-                  </div>
-                  <div className="ai-meta">
-                    <span className="text-red">● Rel. Runout: 3 days</span>
-                    <span>•</span>
-                    <span>Burn rate: 8 pens/day</span>
-                  </div>
-                  <div className="ai-footer">
-                    <span className="ai-vendor">Vendor: Sanofi Biologics</span>
-                    <button className="btn-solid-blue">Fast Reorder <Zap size={12} /></button>
-                  </div>
-                </div>
-
-                <div className="ai-card">
-                  <div className="ai-header">
-                    <div className="ai-title">Azithromycin 250mg</div>
-                    <div>
-                      <div className="ai-rec-label">Recommended</div>
-                      <div className="ai-rec-val">+100 units</div>
-                    </div>
-                  </div>
-                  <div className="ai-meta">
-                    <span className="text-orange">■ Rel. Runout: 8 days</span>
-                    <span>•</span>
-                    <span>Burn rate: 18 u/day</span>
-                  </div>
-                  <div className="ai-footer">
-                    <span className="ai-vendor">Vendor: Sun Pharma Direct</span>
-                    <button className="btn-solid-blue">Fast Reorder <Zap size={12} /></button>
-                  </div>
-                </div>
+                ))}
 
                 <button className="btn-dark">
                   <CheckCircle2 size={16} /> Approve All & Create PO
