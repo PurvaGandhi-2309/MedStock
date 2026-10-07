@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Search, Bell, Plus, Calendar,
   MoreHorizontal, ChevronLeft, ChevronRight,
@@ -8,6 +8,15 @@ import {
 } from 'lucide-react';
 
 const Batch = () => {
+  const [batchData, setBatchData] = useState({
+    kpis: {
+      total: 0,
+      expiring: 0,
+      expired: 0
+    },
+    batchesList: []
+  });
+
   return (
     <>
       <style>{`
@@ -713,9 +722,9 @@ const Batch = () => {
                 <div className="kpi-icon icon-blue"><LayoutGrid size={18} /></div>
               </div>
               <div>
-                <div className="kpi-value">156</div>
+                <div className="kpi-value">{batchData.kpis.total}</div>
                 <div className="kpi-footer">
-                  <span className="text-green">↑ +5% this month</span>
+                  <span className="text-green">↑ +0% this month</span>
                 </div>
               </div>
             </div>
@@ -726,7 +735,7 @@ const Batch = () => {
                 <div className="kpi-icon icon-blue"><Calendar size={18} /></div>
               </div>
               <div>
-                <div className="kpi-value">12</div>
+                <div className="kpi-value">{batchData.kpis.expiring}</div>
                 <div className="kpi-footer">
                   <span className="text-orange">⏱ Within 30 days</span>
                 </div>
@@ -739,7 +748,7 @@ const Batch = () => {
                 <div className="kpi-icon icon-red"><AlertTriangle size={18} /></div>
               </div>
               <div>
-                <div className="kpi-value val-red">3</div>
+                <div className="kpi-value val-red">{batchData.kpis.expired}</div>
                 <div className="kpi-footer">
                   <span className="text-red">⚠ Needs immediate action</span>
                 </div>
@@ -800,138 +809,25 @@ const Batch = () => {
                 </thead>
                 <tbody>
 
-                  {/* Row 1 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-blue" />
-                        <span>Paracetamol 500mg</span>
-                      </div>
-                    </td>
-                    <td>PC1001</td>
-                    <td>Jan 2025</td>
-                    <td>Aug 2026</td>
-                    <td style={{ fontWeight: 500, color: '#0f172a' }}>120</td>
-                    <td>HealthCare Ltd.</td>
-                    <td><div className="status-dot-cell s-green">● Active</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 2 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-blue" />
-                        <span>Amoxicillin 250mg</span>
-                      </div>
-                    </td>
-                    <td>AMX002</td>
-                    <td>Mar 2025</td>
-                    <td>Jun 2026</td>
-                    <td style={{ fontWeight: 500, color: '#0f172a' }}>8</td>
-                    <td>MedSuppliers</td>
-                    <td><div className="status-dot-cell s-green">● Active</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 3 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-blue" />
-                        <span>Vitamin D3</span>
-                      </div>
-                    </td>
-                    <td>VIT003</td>
-                    <td>Nov 2024</td>
-                    <td>Dec 2026</td>
-                    <td style={{ fontWeight: 500, color: '#0f172a' }}>45</td>
-                    <td>LifePharma</td>
-                    <td><div className="status-dot-cell s-green">● Active</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 4 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-orange" />
-                        <span>Azithromycin 250mg</span>
-                      </div>
-                    </td>
-                    <td>AZI005</td>
-                    <td>Apr 2025</td>
-                    <td>Jul 2026</td>
-                    <td className="text-orange" style={{ fontWeight: 500 }}>15</td>
-                    <td>MedSuppliers</td>
-                    <td><div className="status-dot-cell s-orange">● Low Stock</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 5 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-red" />
-                        <span>Cetirizine 10mg</span>
-                      </div>
-                    </td>
-                    <td>CET006</td>
-                    <td>Feb 2025</td>
-                    <td className="text-red">May 2026</td>
-                    <td className="text-red" style={{ fontWeight: 500 }}>5</td>
-                    <td>HealthCare Ltd.</td>
-                    <td><div className="status-dot-cell s-red">● Expired</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 6 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-blue" />
-                        <span>Metformin 500mg</span>
-                      </div>
-                    </td>
-                    <td>MET001</td>
-                    <td>Dec 2024</td>
-                    <td>Nov 2026</td>
-                    <td style={{ fontWeight: 500, color: '#0f172a' }}>200</td>
-                    <td>Cipla</td>
-                    <td><div className="status-dot-cell s-green">● Active</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
-
-                  {/* Row 7 */}
-                  <tr>
-                    <td>
-                      <div className="med-cell">
-                        <Link2 className="link-icon-blue" />
-                        <span>Atorvastatin 20mg</span>
-                      </div>
-                    </td>
-                    <td>ATO008</td>
-                    <td>Jan 2025</td>
-                    <td>Oct 2027</td>
-                    <td style={{ fontWeight: 500, color: '#0f172a' }}>90</td>
-                    <td>Sun Pharma</td>
-                    <td><div className="status-dot-cell s-green">● Active</div></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                    </td>
-                  </tr>
+                  {batchData.batchesList.map((batch, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div className="med-cell">
+                          <Link2 className={`link-icon-${batch.iconColor}`} />
+                          <span>{batch.name}</span>
+                        </div>
+                      </td>
+                      <td>{batch.batchId}</td>
+                      <td>{batch.mfgDate}</td>
+                      <td className={batch.expiryClass}>{batch.expiryDate}</td>
+                      <td className={batch.qtyClass} style={{ fontWeight: 500 }}>{batch.qty}</td>
+                      <td>{batch.supplier}</td>
+                      <td><div className={`status-dot-cell ${batch.statusClass}`}>● {batch.status}</div></td>
+                      <td style={{ textAlign: 'center' }}>
+                        <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
+                      </td>
+                    </tr>
+                  ))}
 
                 </tbody>
               </table>

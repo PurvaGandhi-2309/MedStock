@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Search, Bell, Filter, AlertTriangle, 
   Clock, CalendarX, BellRing, Check,
@@ -9,6 +9,16 @@ import {
 } from 'lucide-react';
 
 const Alert = () => {
+  const [alertData, setAlertData] = useState({
+    kpis: {
+      lowStock: 0,
+      expiring: 0,
+      expired: 0,
+      active: 0
+    },
+    alertsList: []
+  });
+
   return (
     <>
       <style>{`
@@ -691,7 +701,7 @@ const Alert = () => {
                 <div className="kpi-icon icon-red-light"><AlertTriangle size={18} /></div>
               </div>
               <div className="kpi-value-row">
-                <div className="kpi-value">12</div>
+                <div className="kpi-value">{alertData.kpis.lowStock}</div>
                 <div className="kpi-unit kpi-unit-red">SKUs Below Min Level</div>
               </div>
               <div className="kpi-desc">Automated purchase orders recommended today.</div>
@@ -703,7 +713,7 @@ const Alert = () => {
                 <div className="kpi-icon icon-orange-light"><Clock size={18} /></div>
               </div>
               <div className="kpi-value-row">
-                <div className="kpi-value">8</div>
+                <div className="kpi-value">{alertData.kpis.expiring}</div>
                 <div className="kpi-unit kpi-unit-orange">Within Next 30 Days</div>
               </div>
               <div className="kpi-desc">Requires rotation or vendor returns protocol.</div>
@@ -715,7 +725,7 @@ const Alert = () => {
                 <div className="kpi-icon icon-red-light"><CalendarX size={18} /></div>
               </div>
               <div className="kpi-value-row">
-                <div className="kpi-value">3</div>
+                <div className="kpi-value">{alertData.kpis.expired}</div>
                 <div className="kpi-unit kpi-unit-red">Immediate Action Required</div>
               </div>
               <div className="kpi-desc">Requires disposal protocol & vendor return.</div>
@@ -727,7 +737,7 @@ const Alert = () => {
                 <div className="kpi-icon icon-blue-light"><BellRing size={18} /></div>
               </div>
               <div className="kpi-value-row">
-                <div className="kpi-value">20</div>
+                <div className="kpi-value">{alertData.kpis.active}</div>
                 <div className="kpi-unit kpi-unit-blue">Pending Review</div>
               </div>
               <div className="kpi-desc">Updated 2 mins ago via DSCSA Gateway.</div>
@@ -763,264 +773,44 @@ const Alert = () => {
                 </thead>
                 <tbody>
                   
-                  {/* Row 1 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-red">
-                        <AlertTriangle size={14} /> Low Stock
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon"><Pill size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Paracetamol 500mg</span>
-                          <span className="med-desc">Oral Tablet • NDC 50458-587-01</span>
+                  {alertData.alertsList.map((alert, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div className={`type-pill ${alert.typePillClass}`}>
+                          {alert.typeIcon} {alert.type}
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text"><span className="text-red" style={{color:'#ef4444'}}>5 units left</span> • Threshold: 20</div>
-                        <div className="progress-bar"><div className="progress-fill fill-red"></div></div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-high">High</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 27, 2025</span>
-                        <span className="date-sub">09:14 AM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-reorder"><ShoppingCart size={14}/> Reorder</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 2 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-orange">
-                        <Clock size={14} /> Expiring Soon
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon" style={{backgroundColor: '#fff7ed', color: '#f97316'}}><Beaker size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Amoxicillin 250mg</span>
-                          <span className="med-desc">Capsule • GlaxoSmithKline</span>
+                      </td>
+                      <td>
+                        <div className="med-cell">
+                          <div className="med-icon" style={alert.iconStyle}>{alert.medIcon}</div>
+                          <div className="med-info">
+                            <span className="med-name">{alert.name}</span>
+                            <span className="med-desc">{alert.desc}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text">Batch #A123</div>
-                        <div className="detail-sub"><Clock size={12} style={{color:'#f97316'}}/> Expires in 7 days (May 04, 2025)</div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-med">Medium</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 26, 2025</span>
-                        <span className="date-sub">04:30 PM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-view">View Batch</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 3 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-red">
-                        <AlertTriangle size={14} /> Low Stock
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon" style={{backgroundColor: '#f1f5f9', color: '#3b82f6'}}><Droplets size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Vitamin D3 Softgel</span>
-                          <span className="med-desc">60,000 IU • Sun Pharma</span>
+                      </td>
+                      <td>
+                        <div className="detail-cell">
+                          <div className="detail-text">{alert.detailMain}</div>
+                          {alert.detailSub && <div className="detail-sub">{alert.detailSub}</div>}
+                          {alert.progressClass && <div className="progress-bar"><div className={`progress-fill ${alert.progressClass}`} style={{width: alert.progressWidth}}></div></div>}
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text"><span className="text-red" style={{color:'#ef4444'}}>Only 3 units left</span> • Threshold: 10</div>
-                        <div className="progress-bar"><div className="progress-fill fill-red" style={{width: '30%'}}></div></div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-high">High</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 26, 2025</span>
-                        <span className="date-sub">01:12 PM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-reorder"><ShoppingCart size={14}/> Reorder</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 4 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-orange">
-                        <Clock size={14} /> Expiring Soon
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon" style={{backgroundColor: '#fff7ed', color: '#f97316'}}><FileText size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Metformin 500mg</span>
-                          <span className="med-desc">Extended-Release • Bristol-Myers</span>
+                      </td>
+                      <td><span className={`priority-badge ${alert.priorityClass}`}>{alert.priority}</span></td>
+                      <td>
+                        <div className="date-cell">
+                          <span className="date-main">{alert.date}</span>
+                          <span className="date-sub">{alert.time}</span>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text">Batch #B456</div>
-                        <div className="detail-sub"><Clock size={12} style={{color:'#f97316'}}/> Expires in 12 days (May 09, 2025)</div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-med">Medium</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 25, 2025</span>
-                        <span className="date-sub">11:05 AM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-view">View Batch</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 5 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-red">
-                        <AlertTriangle size={14} /> Low Stock
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon"><Activity size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Azithromycin 250mg</span>
-                          <span className="med-desc">Film-coated • Pfizer Labs</span>
+                      </td>
+                      <td>
+                        <div className="action-cell">
+                          <button className={alert.actionBtnClass}>{alert.actionIcon} {alert.actionText}</button>
+                          <button className="action-more"><MoreVertical size={16}/></button>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text"><span className="text-red" style={{color:'#ef4444'}}>Only 7 units left</span> • Threshold: 20</div>
-                        <div className="progress-bar"><div className="progress-fill fill-red" style={{width: '35%'}}></div></div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-high">High</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 24, 2025</span>
-                        <span className="date-sub">02:40 PM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-reorder"><ShoppingCart size={14}/> Reorder</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Row 6 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-orange">
-                        <Clock size={14} /> Expiring Soon
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon" style={{backgroundColor: '#fff7ed', color: '#f97316'}}><Pill size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Cetirizine 10mg</span>
-                          <span className="med-desc">Antihistamine • McNeil</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text">Batch #C789</div>
-                        <div className="detail-sub"><Clock size={12} style={{color:'#f97316'}}/> Expires in 18 days (May 15, 2025)</div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-med">Medium</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 23, 2025</span>
-                        <span className="date-sub">05:22 PM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-view">View Batch</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  {/* Row 7 */}
-                  <tr>
-                    <td>
-                      <div className="type-pill pill-red">
-                        <ThermometerSnowflake size={14} /> Cold Vault Low
-                      </div>
-                    </td>
-                    <td>
-                      <div className="med-cell">
-                        <div className="med-icon" style={{backgroundColor: '#eff6ff', color: '#2563eb'}}><ThermometerSnowflake size={16} /></div>
-                        <div className="med-info">
-                          <span className="med-name">Insulin Glargine 100U/ml</span>
-                          <span className="med-desc">SoloStar Pen • Cold Refrig #2</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="detail-cell">
-                        <div className="detail-text"><span className="text-red" style={{color:'#ef4444'}}>Only 4 pens left</span> • Threshold: 15</div>
-                        <div className="progress-bar"><div className="progress-fill fill-red" style={{width: '26%'}}></div></div>
-                      </div>
-                    </td>
-                    <td><span className="priority-badge pb-high">High</span></td>
-                    <td>
-                      <div className="date-cell">
-                        <span className="date-main">Apr 22, 2025</span>
-                        <span className="date-sub">08:00 AM</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        <button className="btn-reorder"><ShoppingCart size={14}/> Reorder</button>
-                        <button className="action-more"><MoreVertical size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                  ))}
 
                 </tbody>
               </table>

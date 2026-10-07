@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Search, Bell, RefreshCw, ChevronRight, Zap, 
   TrendingUp, AlertTriangle, Calendar, Star, CheckCircle2,
@@ -6,6 +6,10 @@ import {
 } from 'lucide-react';
 
 const Insights = () => {
+  const [insightsData, setInsightsData] = useState({
+    recommendations: []
+  });
+
   return (
     <>
       <style>{`
@@ -729,105 +733,26 @@ const Insights = () => {
                     </thead>
                     <tbody>
                       
-                      {/* Row 1 */}
-                      <tr>
-                        <td>
-                          <div className="med-cell">
-                            <span className="med-name">Paracetamol 500mg</span>
-                            <span className="med-desc">Analgesic • Tablet</span>
-                          </div>
-                        </td>
-                        <td><span className="qty-pill qty-red">5 units</span></td>
-                        <td><span className="qty-pill qty-blue">+50 units</span></td>
-                        <td>
-                          <div className="reason-cell">
-                            <div className="dot dot-red" style={{width:'6px',height:'6px',borderRadius:'50%'}}></div> High demand + low stock
-                          </div>
-                        </td>
-                        <td style={{textAlign: 'right'}}>
-                          <button className="btn-reorder-small">Reorder</button>
-                        </td>
-                      </tr>
-
-                      {/* Row 2 */}
-                      <tr>
-                        <td>
-                          <div className="med-cell">
-                            <span className="med-name">Amoxicillin 250mg</span>
-                            <span className="med-desc">Antibiotic • Capsule</span>
-                          </div>
-                        </td>
-                        <td><span className="qty-pill qty-gray">8 units</span></td>
-                        <td><span className="qty-pill qty-blue">+30 units</span></td>
-                        <td>
-                          <div className="reason-cell">
-                            <TrendingUp size={14} style={{color:'#64748b'}}/> Sales trend (+32%)
-                          </div>
-                        </td>
-                        <td style={{textAlign: 'right'}}>
-                          <button className="btn-reorder-small">Reorder</button>
-                        </td>
-                      </tr>
-
-                      {/* Row 3 */}
-                      <tr>
-                        <td>
-                          <div className="med-cell">
-                            <span className="med-name">Vitamin D3 60k IU</span>
-                            <span className="med-desc">Supplement • Softgel</span>
-                          </div>
-                        </td>
-                        <td><span className="qty-pill qty-red">3 units</span></td>
-                        <td><span className="qty-pill qty-blue">+20 units</span></td>
-                        <td>
-                          <div className="reason-cell">
-                            <div className="dot dot-red" style={{width:'6px',height:'6px',borderRadius:'50%'}}></div> Below min safety par
-                          </div>
-                        </td>
-                        <td style={{textAlign: 'right'}}>
-                          <button className="btn-reorder-small">Reorder</button>
-                        </td>
-                      </tr>
-
-                      {/* Row 4 */}
-                      <tr>
-                        <td>
-                          <div className="med-cell">
-                            <span className="med-name">Metformin 500mg</span>
-                            <span className="med-desc">Antidiabetic • Tablet</span>
-                          </div>
-                        </td>
-                        <td><span className="qty-pill qty-blue">12 units</span></td>
-                        <td><span className="qty-pill qty-blue">+40 units</span></td>
-                        <td>
-                          <div className="reason-cell">
-                            <Activity size={14} style={{color:'#64748b'}}/> High outpatient burn rate
-                          </div>
-                        </td>
-                        <td style={{textAlign: 'right'}}>
-                          <button className="btn-reorder-small">Reorder</button>
-                        </td>
-                      </tr>
-
-                      {/* Row 5 */}
-                      <tr>
-                        <td>
-                          <div className="med-cell">
-                            <span className="med-name">Insulin Glargine SoloStar</span>
-                            <span className="med-desc">Biologic • Prefilled Pen</span>
-                          </div>
-                        </td>
-                        <td><span className="qty-pill qty-red">4 pens</span></td>
-                        <td><span className="qty-pill qty-blue">+25 pens</span></td>
-                        <td>
-                          <div className="reason-cell">
-                            <div className="dot dot-red" style={{width:'6px',height:'6px',borderRadius:'50%'}}></div> 3-day estimated runout
-                          </div>
-                        </td>
-                        <td style={{textAlign: 'right'}}>
-                          <button className="btn-reorder-small">Reorder</button>
-                        </td>
-                      </tr>
+                      {insightsData.recommendations.map((rec, idx) => (
+                        <tr key={idx}>
+                          <td>
+                            <div className="med-cell">
+                              <span className="med-name">{rec.name}</span>
+                              <span className="med-desc">{rec.desc}</span>
+                            </div>
+                          </td>
+                          <td><span className={`qty-pill ${rec.currentQtyClass}`}>{rec.currentQty}</span></td>
+                          <td><span className="qty-pill qty-blue">{rec.recQty}</span></td>
+                          <td>
+                            <div className="reason-cell">
+                              {rec.reasonIcon} {rec.reasonText}
+                            </div>
+                          </td>
+                          <td style={{textAlign: 'right'}}>
+                            <button className="btn-reorder-small">Reorder</button>
+                          </td>
+                        </tr>
+                      ))}
 
                     </tbody>
                   </table>
