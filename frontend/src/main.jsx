@@ -20,6 +20,7 @@ import Batch from "./Batch.jsx";
 import Transactions from "./Transactions.jsx";
 import Alert from "./Alert.jsx";
 import Insights from "./Insights.jsx";
+import Medicine from "./Medicine.jsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")).render(
@@ -35,6 +36,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/alerts" element={<Alert />} />
         <Route path="/insights" element={<Insights />} />
+        <Route path="/medicines" element={<Medicine />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
