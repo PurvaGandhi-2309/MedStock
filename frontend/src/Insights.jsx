@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import { 
   Search, Bell, RefreshCw, ChevronRight, Zap, 
   TrendingUp, AlertTriangle, Calendar, Star, CheckCircle2,
@@ -7,10 +8,87 @@ import {
 
 const Insights = () => {
   const [insightsData, setInsightsData] = useState({
-    recommendations: []
+    recommendations: [],
+    kpis: {
+      increasing: null,
+      lowStock: null,
+      expiry: null,
+      topSelling: null
+    }
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [loadingAi, setLoadingAi] = useState(false);
+  const [aiError, setAiError] = useState('');
+
+  const generateAiInsights = async () => {
+    setLoadingAi(true);
+    setAiError('');
+    try {
+      const res = await api.post('/ai/inventory-insights');
+      setAiSummary(res.data.insights);
+    } catch (err) {
+      console.error(err);
+      setAiError(err.response?.data?.error || err.response?.data?.message || "Failed to load AI Insights");
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
+  const fetchInsights = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/reorder');
+      const list = res.data.reorderList;
+      
+      const recs = [];
+      let topSeller = null;
+      let worstStock = null;
+      
+      list.forEach(item => {
+        if (item.needsReorder) {
+          recs.push({
+            name: item.name,
+            desc: `ID: ${item.medicineId}`,
+            currentQty: item.currentStock,
+            currentQtyClass: item.currentStock <= item.minimumStock ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600',
+            recQty: item.suggestedReorderQuantity,
+            reasonText: `Avg ${item.averageDailySales}/day | Sold ${item.last30DaysSales} in 30d`,
+            reasonIcon: <Activity size={14} style={{ color: '#64748b', marginRight: '4px' }} />
+          });
+        }
+        
+        // Find top seller
+        if (!topSeller || item.last30DaysSales > topSeller.last30DaysSales) {
+          topSeller = item;
+        }
+        
+        // Find worst stock (lowest difference between current and min)
+        const stockDiff = item.currentStock - item.minimumStock;
+        if (!worstStock || stockDiff < (worstStock.currentStock - worstStock.minimumStock)) {
+          worstStock = item;
+        }
+      });
+      
+      setInsightsData({
+        recommendations: recs,
+        kpis: {
+          topSelling: topSeller,
+          lowStock: worstStock
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsights();
+  }, []);
 
   const filteredRecommendations = insightsData.recommendations.filter(rec =>
     !searchQuery || JSON.stringify(rec).toLowerCase().includes(searchQuery.toLowerCase())
@@ -724,8 +802,8 @@ const Insights = () => {
                       <Zap size={18} />
                     </div>
                     <div>
-                      <h2 className="panel-title">AI Recommendations</h2>
-                      <p className="panel-subtitle">Based on current stock, sales history, and outpatient demand patterns.</p>
+                      <h2 className="panel-title">Reorder Recommendations</h2>
+                      <p className="panel-subtitle">Based on 30-day trailing sales and current stock levels.</p>
                     </div>
                   </div>
                   <a href="#" className="link-view-all">View All <ChevronRight size={16}/></a>
@@ -738,7 +816,7 @@ const Insights = () => {
                         <th>Medicine</th>
                         <th>Current Stock</th>
                         <th>Recommended Qty</th>
-                        <th>Reason / AI Signal</th>
+                        <th>Reason / Metrics</th>
                         <th style={{textAlign: 'right'}}>Action</th>
                       </tr>
                     </thead>
@@ -752,22 +830,22 @@ const Insights = () => {
                                 <span className="med-desc">{rec.desc}</span>
                               </div>
                             </td>
-                            <td><span className={`qty-pill ${rec.currentQtyClass}`}>{rec.currentQty}</span></td>
-                            <td><span className="qty-pill qty-blue">{rec.recQty}</span></td>
+                            <td><span className={`qty-pill`} style={{ padding: '0.25rem 0.5rem', borderRadius: '0.25rem', backgroundColor: '#f1f5f9' }}>{rec.currentQty}</span></td>
+                            <td><span className="qty-pill qty-blue" style={{ padding: '0.25rem 0.5rem', borderRadius: '0.25rem', backgroundColor: '#eff6ff', color: '#2563eb', fontWeight: 600 }}>{rec.recQty}</span></td>
                             <td>
-                              <div className="reason-cell">
+                              <div className="reason-cell" style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', color: '#64748b' }}>
                                 {rec.reasonIcon} {rec.reasonText}
                               </div>
                             </td>
                             <td style={{textAlign: 'right'}}>
-                              <button className="btn-reorder-small">Reorder</button>
+                              <button className="btn-reorder-small" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', backgroundColor: 'white' }}>Reorder</button>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                            {searchQuery ? "No matching recommendations found." : "No AI recommendations currently available."}
+                            {loading ? "Calculating..." : (searchQuery ? "No matching recommendations found." : "No reorders recommended at this time.")}
                           </td>
                         </tr>
                       )}
@@ -801,13 +879,13 @@ const Insights = () => {
                   <div className="insight-card">
                     <div className="insight-header">
                       <div className="insight-icon-sm bg-green-light"><TrendingUp size={14}/></div>
-                      Sales Increasing
+                      Action Needed
                     </div>
                     <div className="insight-text">
-                      Amoxicillin 250mg sales are up <strong>32%</strong> this week across outpatient clinics.
+                      You have <strong>{insightsData.recommendations.length} items</strong> below their optimal stock levels based on trailing sales.
                     </div>
                     <div className="insight-footer text-green">
-                      + High Turn Factor
+                      + Restock Suggested
                     </div>
                   </div>
 
@@ -815,27 +893,29 @@ const Insights = () => {
                   <div className="insight-card">
                     <div className="insight-header">
                       <div className="insight-icon-sm bg-orange-light"><AlertTriangle size={14}/></div>
-                      Low Stock Risk
+                      Most Urgent Restock
                     </div>
                     <div className="insight-text">
-                      Vitamin D3 60k may run out in <strong>3 days</strong> at current dispensation velocity.
+                      {insightsData.kpis.lowStock ? (
+                        <><strong>{insightsData.kpis.lowStock.name}</strong> is currently at {insightsData.kpis.lowStock.currentStock} units (Min: {insightsData.kpis.lowStock.minimumStock}).</>
+                      ) : "All stock levels are perfectly optimal."}
                     </div>
                     <div className="insight-footer text-orange">
-                      ⚠ Runout: Friday
+                      ⚠ Review Quantities
                     </div>
                   </div>
 
                   {/* Insight 3 */}
                   <div className="insight-card">
                     <div className="insight-header">
-                      <div className="insight-icon-sm bg-orange-light"><Calendar size={14}/></div>
-                      Expiry Alert
+                      <div className="insight-icon-sm bg-blue-light"><Activity size={14}/></div>
+                      Total Order Volume
                     </div>
                     <div className="insight-text">
-                      <strong>2 batches</strong> (Paracetamol & Salbutamol) will reach expiration within 7 days.
+                      To fully restock all recommended items for a 30-day supply, you need to order <strong>{insightsData.recommendations.reduce((sum, r) => sum + r.recQty, 0)} total units</strong>.
                     </div>
-                    <div className="insight-footer text-orange">
-                      ! First-Expiry First-Out
+                    <div className="insight-footer text-blue">
+                      ✔ Covers next 30 days
                     </div>
                   </div>
 
@@ -846,7 +926,9 @@ const Insights = () => {
                       Best Performing
                     </div>
                     <div className="insight-text">
-                      Paracetamol 500mg continues as your highest selling medicine (384 units this month).
+                      {insightsData.kpis.topSelling ? (
+                        <><strong>{insightsData.kpis.topSelling.name}</strong> was your highest selling medicine ({insightsData.kpis.topSelling.last30DaysSales} units in 30 days).</>
+                      ) : "No sales data available yet."}
                     </div>
                     <div className="insight-footer text-blue">
                       ✔ Steady Margin Tier 1
@@ -935,7 +1017,7 @@ const Insights = () => {
                 </div>
               </div>
 
-              {/* Promo Card */}
+              {/* AI Promo Card / Summary Card */}
               <div className="ai-promo-card">
                 <div className="ai-promo-header">
                   <div className="bot-icon-wrapper">
@@ -943,26 +1025,77 @@ const Insights = () => {
                   </div>
                   <Sparkles size={20} style={{color: '#3b82f6'}} />
                 </div>
-                <div>
-                  <div className="ai-promo-title">Let AI Work for You</div>
-                  <p className="ai-promo-desc">
-                    Get intelligent automated replenishment recommendations to optimize working capital, prevent unexpected drug shortages, and reduce expiry losses.
-                  </p>
-                </div>
-                <div className="feature-list">
-                  <div className="feature-item">
-                    <CheckCircle2 size={14} style={{color:'#3b82f6'}}/> Autonomous EDI 850 Order Formulation
+                
+                {!aiSummary && !loadingAi && (
+                  <>
+                    <div>
+                      <div className="ai-promo-title">Pharmacy AI Assistant</div>
+                      <p className="ai-promo-desc">
+                        Get an intelligent, natural-language summary of your entire pharmacy's health, warnings, and suggested actions using Google Gemini.
+                      </p>
+                    </div>
+                    {aiError && <div style={{color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem'}}>{aiError}</div>}
+                    <button 
+                      className="btn-solid-large" 
+                      style={{width: '100%', justifyContent: 'center', marginTop: '1rem'}}
+                      onClick={generateAiInsights}
+                    >
+                      <Sparkles size={16} style={{ marginRight: '0.5rem' }}/> Generate AI Summary
+                    </button>
+                  </>
+                )}
+
+                {loadingAi && (
+                  <div style={{ padding: '2rem 0', textAlign: 'center', color: '#64748b' }}>
+                    <RefreshCw size={24} className="spin-icon" style={{ margin: '0 auto 1rem auto', animation: 'spin 1s linear infinite' }} />
+                    <p>Gemini is analyzing your inventory data...</p>
                   </div>
-                  <div className="feature-item">
-                    <CheckCircle2 size={14} style={{color:'#3b82f6'}}/> Predictive Seasonal Epidemiological Shifts
+                )}
+
+                {aiSummary && !loadingAi && (
+                  <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                      <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0f172a', marginBottom: '0.25rem' }}>Executive Summary</h4>
+                      <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.5 }}>{aiSummary.summary}</p>
+                    </div>
+                    
+                    {aiSummary.importantWarnings && (Array.isArray(aiSummary.importantWarnings) ? aiSummary.importantWarnings.length > 0 : true) && (
+                      <div style={{ backgroundColor: '#fef2f2', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#dc2626', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <AlertTriangle size={14} /> Warnings
+                        </h4>
+                        <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem', color: '#991b1b' }}>
+                          {Array.isArray(aiSummary.importantWarnings) 
+                            ? aiSummary.importantWarnings.map((warning, i) => <li key={i} style={{ marginBottom: '0.25rem' }}>{warning}</li>)
+                            : <li style={{ marginBottom: '0.25rem' }}>{aiSummary.importantWarnings}</li>
+                          }
+                        </ul>
+                      </div>
+                    )}
+
+                    {aiSummary.reorderSuggestions && (Array.isArray(aiSummary.reorderSuggestions) ? aiSummary.reorderSuggestions.length > 0 : true) && (
+                      <div style={{ backgroundColor: '#eff6ff', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#2563eb', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <ShoppingCart size={14} /> Reorder Strategy
+                        </h4>
+                        <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem', color: '#1e40af' }}>
+                          {Array.isArray(aiSummary.reorderSuggestions)
+                            ? aiSummary.reorderSuggestions.map((suggestion, i) => <li key={i} style={{ marginBottom: '0.25rem' }}>{suggestion}</li>)
+                            : <li style={{ marginBottom: '0.25rem' }}>{aiSummary.reorderSuggestions}</li>
+                          }
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <button 
+                      className="btn-outline" 
+                      style={{width: '100%', justifyContent: 'center', marginTop: '0.5rem'}}
+                      onClick={generateAiInsights}
+                    >
+                      <RefreshCw size={14} style={{ marginRight: '0.25rem' }}/> Refresh Analysis
+                    </button>
                   </div>
-                  <div className="feature-item">
-                    <CheckCircle2 size={14} style={{color:'#3b82f6'}}/> Zero-Waste Expiry Allocation Models
-                  </div>
-                </div>
-                <button className="btn-solid-large" style={{width: '100%', justifyContent: 'center', marginTop: '0.5rem'}}>
-                  View Full AI Insights & Settings <ArrowRight size={16} />
-                </button>
+                )}
               </div>
 
             </div>

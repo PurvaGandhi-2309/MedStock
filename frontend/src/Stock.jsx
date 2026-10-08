@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import {
-  Search, Bell, User, Plus, Download,
+  Search, Bell, User, Plus, Download, Minus,
   Package, LayoutGrid, AlertTriangle, Calendar,
   MoreHorizontal, ChevronLeft, ChevronRight,
   Pill, Activity, Beaker, FileText, Droplets, TrendingUp, Clock
@@ -8,21 +9,117 @@ import {
 
 const Stock = () => {
   const [stockData, setStockData] = useState({
-    kpis: {
-      totalValue: "₹0",
-      totalItems: 0,
-      lowStock: 0,
-      expiring: 0
-    },
+    kpis: { totalValue: "₹0", totalItems: 0, lowStock: 0, expiring: 0 },
     inventory: []
   });
-
+  
+  const [medicines, setMedicines] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isOutModalOpen, setIsOutModalOpen] = useState(false);
+  
+  // Form State
+  const [selectedMed, setSelectedMed] = useState('');
+  const [selectedBatch, setSelectedBatch] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [fefoResult, setFefoResult] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      const [medRes, batchRes] = await Promise.all([
+        api.get('/medicines'),
+        api.get('/batches')
+      ]);
+      setMedicines(medRes.data.medicines);
+      setBatches(batchRes.data);
+      
+      const inv = medRes.data.medicines.map(med => {
+        const medBatches = batchRes.data.filter(b => b.medicineId === med.medicineId);
+        const currentStock = medBatches.reduce((sum, b) => b.expiryDate >= new Date().toISOString() ? sum + b.quantity : sum, 0);
+        return {
+          name: med.name,
+          category: med.category,
+          batch: medBatches.length > 0 ? medBatches.length + " batches" : "None",
+          expiry: medBatches.length > 0 ? new Date(Math.min(...medBatches.map(b => new Date(b.expiryDate)))).toLocaleDateString() : "-",
+          currentStock,
+          minStock: med.minimumStock,
+          status: currentStock > med.minimumStock ? 'In Stock' : 'Low Stock'
+        };
+      });
+      
+      setStockData({
+        kpis: { 
+          totalValue: "₹0", 
+          totalItems: inv.reduce((sum, i) => sum + i.currentStock, 0), 
+          lowStock: inv.filter(i => i.status === 'Low Stock').length, 
+          expiring: 0 
+        },
+        inventory: inv
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const filteredInventory = stockData.inventory.filter(item =>
     !searchQuery || JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  const handleStockIn = async () => {
+    if (!selectedMed || !selectedBatch || !quantity || quantity <= 0 || !Number.isInteger(Number(quantity))) {
+      setErrorMsg("Please select a medicine, a batch, and enter a valid whole number quantity.");
+      return;
+    }
+    setSaving(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await api.post('/stock/in', { medicineId: selectedMed, batchNumber: selectedBatch, quantity: Number(quantity) });
+      setSuccessMsg(`Successfully added ${quantity} units!`);
+      setQuantity('');
+      setSelectedBatch('');
+      fetchData();
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || "Error adding stock");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStockOut = async () => {
+    if (!selectedMed || !quantity || quantity <= 0 || !Number.isInteger(Number(quantity))) {
+      setErrorMsg("Please select a medicine and enter a valid whole number quantity.");
+      return;
+    }
+    setSaving(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    setFefoResult(null);
+    try {
+      const res = await api.post('/stock/out', { medicineId: selectedMed, quantity: Number(quantity) });
+      setSuccessMsg(`Successfully dispensed ${quantity} units!`);
+      setFefoResult(res.data.batchesUsed);
+      setQuantity('');
+      fetchData();
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || "Error dispensing stock");
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const getAvailableStock = (medId) => {
+    const medBatches = batches.filter(b => b.medicineId === medId && b.expiryDate >= new Date().toISOString() && b.quantity > 0);
+    return medBatches.reduce((sum, b) => sum + b.quantity, 0);
+  };
 
   return (
     <>
@@ -676,11 +773,11 @@ const Stock = () => {
               <p className="page-subtitle">Manage and track your current clinic and pharmacy stock levels.</p>
             </div>
             <div className="header-actions">
-              <button className="btn-outline">
-                <Download size={16} /> Export Report
+              <button className="btn-outline" onClick={() => { setIsOutModalOpen(true); setErrorMsg(''); setSuccessMsg(''); setFefoResult(null); }}>
+                <Minus size={16} /> Dispense (OUT)
               </button>
-              <button className="btn-solid" onClick={() => setIsAddModalOpen(true)}>
-                <Plus size={16} /> Add Stock Item
+              <button className="btn-solid" onClick={() => { setIsAddModalOpen(true); setErrorMsg(''); setSuccessMsg(''); }}>
+                <Plus size={16} /> Add Stock (IN)
               </button>
             </div>
           </header>
@@ -851,18 +948,76 @@ const Stock = () => {
       {isAddModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">Add Stock Item</h3>
-            <input type="text" className="modal-input" placeholder="Medicine Name" />
-            <input type="text" className="modal-input" placeholder="Batch No" />
+            <h3 className="modal-title">Add Stock (IN)</h3>
+            
+            {errorMsg && <div style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fef2f2', borderRadius: '0.25rem' }}>{errorMsg}</div>}
+            {successMsg && <div style={{ color: '#10b981', fontSize: '0.875rem', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#ecfdf5', borderRadius: '0.25rem' }}>{successMsg}</div>}
+            
+            <select className="modal-input" value={selectedMed} onChange={e => { setSelectedMed(e.target.value); setSelectedBatch(''); }}>
+              <option value="">Select Medicine</option>
+              {medicines.map(m => (
+                <option key={m._id} value={m.medicineId}>{m.name} ({m.medicineId})</option>
+              ))}
+            </select>
+            
+            <select className="modal-input" value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)} disabled={!selectedMed}>
+              <option value="">Select Existing Batch</option>
+              {batches.filter(b => b.medicineId === selectedMed).map(b => (
+                <option key={b._id} value={b.batchNumber}>{b.batchNumber} (Expires: {new Date(b.expiryDate).toLocaleDateString()})</option>
+              ))}
+            </select>
+            
+            <input type="number" className="modal-input" placeholder="Quantity to add" value={quantity} onChange={e => setQuantity(e.target.value)} />
+            
             <div className="modal-actions">
-              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-              <button className="btn-solid" onClick={() => {
-                setStockData(prev => ({
-                  ...prev,
-                  inventory: [...prev.inventory, { name: "New Stock", type: "Tablet", currentStock: 100, minStock: 20, status: 'In Stock' }]
-                }));
-                setIsAddModalOpen(false);
-              }}>Save</button>
+              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Close</button>
+              <button className="btn-solid" onClick={handleStockIn} disabled={saving}>
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isOutModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Dispense Stock (OUT)</h3>
+            
+            {errorMsg && <div style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fef2f2', borderRadius: '0.25rem' }}>{errorMsg}</div>}
+            {successMsg && <div style={{ color: '#10b981', fontSize: '0.875rem', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#ecfdf5', borderRadius: '0.25rem' }}>{successMsg}</div>}
+            
+            <select className="modal-input" value={selectedMed} onChange={e => setSelectedMed(e.target.value)}>
+              <option value="">Select Medicine</option>
+              {medicines.map(m => (
+                <option key={m._id} value={m.medicineId}>{m.name} ({m.medicineId})</option>
+              ))}
+            </select>
+            
+            {selectedMed && (
+              <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+                Available Stock: <strong style={{ color: '#0f172a' }}>{getAvailableStock(selectedMed)} units</strong>
+              </div>
+            )}
+            
+            <input type="number" className="modal-input" placeholder="Quantity to dispense" value={quantity} onChange={e => setQuantity(e.target.value)} />
+            
+            {fefoResult && (
+              <div style={{ fontSize: '0.75rem', backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                <strong>FEFO Result:</strong>
+                <ul style={{ paddingLeft: '1.25rem', marginTop: '0.25rem', marginBottom: 0 }}>
+                  {fefoResult.map((b, i) => (
+                    <li key={i}>Batch {b.batchNumber}: used {b.quantityTaken} (left: {b.quantityLeft})</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="modal-actions">
+              <button className="btn-outline" onClick={() => setIsOutModalOpen(false)}>Close</button>
+              <button className="btn-solid" onClick={handleStockOut} disabled={saving}>
+                {saving ? 'Saving...' : 'Dispense'}
+              </button>
             </div>
           </div>
         </div>

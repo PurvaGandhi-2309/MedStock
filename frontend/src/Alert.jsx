@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import { 
   Search, Bell, Filter, AlertTriangle, 
   Clock, CalendarX, BellRing, Check,
@@ -10,16 +11,112 @@ import {
 
 const Alert = () => {
   const [alertData, setAlertData] = useState({
-    kpis: {
-      lowStock: 0,
-      expiring: 0,
-      expired: 0,
-      active: 0
-    },
+    kpis: { lowStock: 0, expiring: 0, expired: 0, active: 0 },
     alertsList: []
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const fetchAlerts = async () => {
+    try {
+      const [expRes, expSoonRes, lowRes] = await Promise.allSettled([
+        api.get('/alerts/expired'),
+        api.get('/alerts/expiring-soon'),
+        api.get('/alerts/low-stock')
+      ]);
+
+      let errors = [];
+      
+      const expiredBatches = expRes.status === 'fulfilled' ? expRes.value.data.expiredBatches : (errors.push("Expired"), []);
+      const expiringSoonBatches = expSoonRes.status === 'fulfilled' ? expSoonRes.value.data.expiringSoonBatches : (errors.push("Expiring Soon"), []);
+      const lowStockMedicines = lowRes.status === 'fulfilled' ? lowRes.value.data.lowStockMedicines : (errors.push("Low Stock"), []);
+      
+      if (errors.length > 0) {
+        setErrorMsg(`Failed to load: ${errors.join(', ')}. Please try refreshing.`);
+      } else {
+        setErrorMsg('');
+      }
+
+      const unifiedList = [];
+      const expiredKeys = new Set();
+
+      // 1. Expired (Urgent / Red)
+      expiredBatches.forEach(b => {
+        expiredKeys.add(b.medicineId + b.batchNumber);
+        unifiedList.push({
+          type: "Expired",
+          typePillClass: "bg-red-100 text-red-600",
+          priority: "Critical",
+          priorityClass: "bg-red-100 text-red-600",
+          name: b.medicineName,
+          desc: `Batch: ${b.batchNumber}`,
+          detailMain: `Expired ${b.daysExpired} days ago`,
+          detailSub: `Quantity: ${b.quantity} units`,
+          date: new Date(b.expiryDate).toLocaleDateString(),
+          time: "-",
+          actionText: "Discard",
+          sortWeight: 1
+        });
+      });
+
+      // 2. Expiring Soon (Warning / Yellow)
+      expiringSoonBatches.forEach(b => {
+        if (!expiredKeys.has(b.medicineId + b.batchNumber)) {
+          unifiedList.push({
+            type: "Expiring Soon",
+            typePillClass: "bg-yellow-100 text-yellow-700",
+            priority: "Warning",
+            priorityClass: "bg-yellow-100 text-yellow-700",
+            name: b.medicineName,
+            desc: `Batch: ${b.batchNumber}`,
+            detailMain: `Expires in ${b.daysLeft} days`,
+            detailSub: `Quantity: ${b.quantity} units`,
+            date: new Date(b.expiryDate).toLocaleDateString(),
+            time: "-",
+            actionText: "Review",
+            sortWeight: 2
+          });
+        }
+      });
+
+      // 3. Low Stock (Action / Orange)
+      lowStockMedicines.forEach(m => {
+        unifiedList.push({
+          type: "Low Stock",
+          typePillClass: "bg-orange-100 text-orange-600",
+          priority: "Action",
+          priorityClass: "bg-orange-100 text-orange-600",
+          name: m.name,
+          desc: `ID: ${m.medicineId}`,
+          detailMain: `Stock: ${m.totalStock} units`,
+          detailSub: `Minimum Threshold: ${m.minimumStock}`,
+          date: new Date().toLocaleDateString(),
+          time: "-",
+          actionText: "Reorder",
+          sortWeight: 3
+        });
+      });
+
+      unifiedList.sort((a, b) => a.sortWeight - b.sortWeight);
+
+      setAlertData({
+        kpis: {
+          expired: expiredBatches.length,
+          expiring: unifiedList.filter(a => a.type === 'Expiring Soon').length,
+          lowStock: lowStockMedicines.length,
+          active: unifiedList.length
+        },
+        alertsList: unifiedList
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
 
   const filteredAlerts = alertData.alertsList.filter(alert =>
     !searchQuery || JSON.stringify(alert).toLowerCase().includes(searchQuery.toLowerCase())
@@ -759,15 +856,16 @@ const Alert = () => {
           <div className="panel-card">
             <div className="panel-nav">
               <div className="tab-list">
-                <div className="tab-item active">All (20)</div>
-                <div className="tab-item">Low Stock (12)</div>
-                <div className="tab-item">Expiring Soon (8)</div>
-                <div className="tab-item">Batches</div>
-                <div className="tab-item">System Notices</div>
+                <div className="tab-item active">All ({alertData.kpis.active})</div>
+                <div className="tab-item">Low Stock ({alertData.kpis.lowStock})</div>
+                <div className="tab-item">Expiring Soon ({alertData.kpis.expiring})</div>
               </div>
-              <button className="mark-read-btn">
-                <Check size={16} /> Mark all as read
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                {errorMsg && <div style={{ color: '#ef4444', fontSize: '0.875rem' }}>{errorMsg}</div>}
+                <button className="mark-read-btn" onClick={fetchAlerts}>
+                  <RefreshCw size={16} /> Refresh
+                </button>
+              </div>
             </div>
 
             <div className="table-container">
@@ -787,13 +885,12 @@ const Alert = () => {
                     filteredAlerts.map((alert, idx) => (
                       <tr key={idx}>
                         <td>
-                          <div className={`type-pill ${alert.typePillClass}`}>
-                            {alert.typeIcon} {alert.type}
+                          <div className={`type-pill ${alert.typePillClass}`} style={{ fontWeight: '600', padding: '0.25rem 0.75rem', borderRadius: '9999px', display: 'inline-flex', fontSize: '0.75rem' }}>
+                            {alert.type}
                           </div>
                         </td>
                         <td>
                           <div className="med-cell">
-                            <div className="med-icon" style={alert.iconStyle}>{alert.medIcon}</div>
                             <div className="med-info">
                               <span className="med-name">{alert.name}</span>
                               <span className="med-desc">{alert.desc}</span>
@@ -802,22 +899,19 @@ const Alert = () => {
                         </td>
                         <td>
                           <div className="detail-cell">
-                            <div className="detail-text">{alert.detailMain}</div>
-                            {alert.detailSub && <div className="detail-sub">{alert.detailSub}</div>}
-                            {alert.progressClass && <div className="progress-bar"><div className={`progress-fill ${alert.progressClass}`} style={{width: alert.progressWidth}}></div></div>}
+                            <div className="detail-text" style={{ fontWeight: 600 }}>{alert.detailMain}</div>
+                            <div className="detail-sub" style={{ fontSize: '0.75rem', color: '#64748b' }}>{alert.detailSub}</div>
                           </div>
                         </td>
-                        <td><span className={`priority-badge ${alert.priorityClass}`}>{alert.priority}</span></td>
+                        <td><span className={`priority-badge ${alert.priorityClass}`} style={{ fontWeight: '600', padding: '0.25rem 0.75rem', borderRadius: '9999px', display: 'inline-flex', fontSize: '0.75rem' }}>{alert.priority}</span></td>
                         <td>
                           <div className="date-cell">
                             <span className="date-main">{alert.date}</span>
-                            <span className="date-sub">{alert.time}</span>
                           </div>
                         </td>
                         <td>
                           <div className="action-cell">
-                            <button className={alert.actionBtnClass}>{alert.actionIcon} {alert.actionText}</button>
-                            <button className="action-more"><MoreVertical size={16}/></button>
+                            <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>{alert.actionText}</button>
                           </div>
                         </td>
                       </tr>
@@ -825,7 +919,7 @@ const Alert = () => {
                   ) : (
                     <tr>
                       <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                        {searchQuery ? "No matches found." : "No alerts to display."}
+                        {searchQuery ? "No matches found." : "No active alerts."}
                       </td>
                     </tr>
                   )}

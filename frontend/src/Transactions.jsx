@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import { 
   Search, Bell, Filter, Download,
   ArrowRightLeft, RefreshCw, Calendar, Tag, Package,
@@ -8,16 +9,53 @@ import {
 
 const Transactions = () => {
   const [transactionData, setTransactionData] = useState({
-    kpis: {
-      total: 0,
-      stockIn: 0,
-      stockOut: 0,
-      adjustments: 0
-    },
+    kpis: { total: 0, stockIn: 0, stockOut: 0, adjustments: 0 },
     ledger: []
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('');
+
+  const fetchTransactions = async () => {
+    try {
+      let url = '/transactions';
+      if (filterType) url += `?type=${filterType}`;
+      
+      const [txRes, medRes] = await Promise.all([
+        api.get(url),
+        api.get('/medicines')
+      ]);
+      
+      const meds = medRes.data.medicines;
+      const ledger = txRes.data.transactions.map(tx => {
+        const med = meds.find(m => m.medicineId === tx.medicineId);
+        return {
+          id: tx._id,
+          date: new Date(tx.date).toLocaleString(),
+          medicineName: med ? med.name : tx.medicineId,
+          batchNumber: tx.batchNumber,
+          type: tx.type,
+          quantity: tx.quantity
+        };
+      });
+      
+      setTransactionData({
+        kpis: {
+          total: ledger.length,
+          stockIn: ledger.filter(t => t.type === 'IN').length,
+          stockOut: ledger.filter(t => t.type === 'OUT').length,
+          adjustments: 0
+        },
+        ledger
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [filterType]);
 
   const filteredLedger = transactionData.ledger.filter(txn =>
     !searchQuery || JSON.stringify(txn).toLowerCase().includes(searchQuery.toLowerCase())
@@ -732,7 +770,7 @@ const Transactions = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button className="btn-refresh">
+              <button className="btn-refresh" onClick={fetchTransactions}>
                 <RefreshCw size={16} />
               </button>
             </div>
@@ -744,18 +782,15 @@ const Transactions = () => {
               <div className="filter-item">
                 <label className="filter-label"><Calendar size={14}/> Date Range</label>
                 <select className="filter-select">
-                  <option>Last 7 days</option>
-                  <option>Last 30 days</option>
-                  <option>This Month</option>
+                  <option>All Time</option>
                 </select>
               </div>
               <div className="filter-item">
                 <label className="filter-label"><Tag size={14}/> Type</label>
-                <select className="filter-select">
-                  <option>All Types</option>
-                  <option>Sale</option>
-                  <option>Stock In</option>
-                  <option>Adjustment</option>
+                <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                  <option value="">All Types</option>
+                  <option value="OUT">Dispensed (OUT)</option>
+                  <option value="IN">Restocked (IN)</option>
                 </select>
               </div>
               <div className="filter-item">
@@ -863,21 +898,27 @@ const Transactions = () => {
                         <td style={{color: '#64748b'}}>{txn.date}</td>
                         <td>
                           <div className="med-cell">
-                            <span className="med-name">{txn.name}</span>
-                            <span className="med-desc">{txn.desc}</span>
+                            <span className="med-name">{txn.medicineName}</span>
+                            <span className="med-desc">Batch: {txn.batchNumber}</span>
                           </div>
                         </td>
-                        <td><span className={`type-pill ${txn.typeClass}`}>{txn.type}</span></td>
-                        <td className={txn.qtyClass} style={{textAlign: 'right'}}>{txn.qty}</td>
-                        <td className="col-price" style={{textAlign: 'right'}}>{txn.price}</td>
-                        <td className="col-total" style={{textAlign: 'right'}}>{txn.total}</td>
+                        <td>
+                          <span className={`type-pill ${txn.type === 'IN' ? 'pill-stockin' : 'pill-sale'}`}>
+                            {txn.type}
+                          </span>
+                        </td>
+                        <td className={txn.type === 'IN' ? 'qty-stockin' : 'qty-sale'} style={{textAlign: 'right'}}>
+                          {txn.type === 'IN' ? '+' : '-'}{txn.quantity}
+                        </td>
+                        <td className="col-price" style={{textAlign: 'right'}}>-</td>
+                        <td className="col-total" style={{textAlign: 'right'}}>-</td>
                         <td>
                           <div className="user-role-cell">
-                            <div className="role-avatar" style={txn.avatarStyle}>{txn.avatar}</div>
-                            <span>{txn.role}</span>
+                            <div className="role-avatar" style={{backgroundColor: '#e2e8f0', color: '#64748b'}}>PG</div>
+                            <span>Pharmacist</span>
                           </div>
                         </td>
-                        <td className="remarks-text">{txn.remarks}</td>
+                        <td className="remarks-text">Transaction ID: {txn.id.slice(-6).toUpperCase()}</td>
                         <td style={{textAlign: 'center'}}>
                           <button className="action-btn" style={{margin:'0 auto'}}><MoreHorizontal size={18} /></button>
                         </td>
@@ -886,7 +927,7 @@ const Transactions = () => {
                   ) : (
                     <tr>
                       <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                        {searchQuery ? "No matches found." : "No transactions loaded. Database connection pending."}
+                        {searchQuery ? "No matches found." : "No transactions recorded yet."}
                       </td>
                     </tr>
                   )}
