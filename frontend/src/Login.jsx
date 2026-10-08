@@ -26,7 +26,7 @@ const Login = () => {
     }
     setError('');
     
-    api.post('/login', formData)
+    api.post('/auth/login', formData)
       .then(res => {
         localStorage.setItem("token", res.data.token);
         navigate('/dashboard');

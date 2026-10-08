@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import {
   Search, Bell, Plus, Calendar,
   MoreHorizontal, ChevronLeft, ChevronRight,
@@ -9,20 +10,160 @@ import {
 
 const Batch = () => {
   const [batchData, setBatchData] = useState({
-    kpis: {
-      total: 0,
-      expiring: 0,
-      expired: 0
-    },
+    total: 0,
     batchesList: []
   });
-
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [medicines, setMedicines] = useState([]);
+  const [selectedMedicineId, setSelectedMedicineId] = useState('');
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  const initialForm = { medicineId: '', batchNumber: '', quantity: '', purchasePrice: '', sellingPrice: '', supplier: '', expiryDate: '' };
+  const [formData, setFormData] = useState(initialForm);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    api.get('/medicines').then(res => {
+      setMedicines(res.data.medicines || []);
+    }).catch(err => console.error(err));
+  }, []);
+
+  const fetchBatches = () => {
+    if (!selectedMedicineId) {
+      setBatchData({ total: 0, batchesList: [] });
+      return;
+    }
+    setLoading(true);
+    api.get(`/batches/medicine/${selectedMedicineId}`)
+      .then(res => {
+        setBatchData({
+          total: res.data.count || res.data.batches?.length || 0,
+          batchesList: res.data.batches || []
+        });
+        setError('');
+      })
+      .catch(err => {
+        setError(err.response?.data?.message || 'Failed to load batches');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchBatches();
+  }, [selectedMedicineId]);
 
   const filteredBatches = batchData.batchesList.filter(batch =>
     !searchQuery || JSON.stringify(batch).toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getDayDiff = (dateStr) => {
+    if (!dateStr) return 999;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(dateStr);
+    const diffTime = expiry - today;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const kpis = { total: batchData.batchesList.length, expiring: 0, expired: 0 };
+  batchData.batchesList.forEach(b => {
+    const days = getDayDiff(b.expiryDate);
+    if (days < 0) kpis.expired++;
+    else if (days <= 30 && days >= 0) kpis.expiring++;
+  });
+
+  const handleDelete = (batchNumber) => {
+    if (window.confirm('Are you sure you want to delete this batch?')) {
+      api.delete(`/batches/${selectedMedicineId}/${batchNumber}`)
+        .then(() => fetchBatches())
+        .catch(err => alert(err.response?.data?.message || 'Error deleting batch'));
+    }
+  };
+
+  const handleSave = () => {
+    setModalError('');
+    setIsSaving(true);
+    
+    if (!formData.medicineId) {
+      setModalError('Please select a medicine.');
+      setIsSaving(false);
+      return;
+    }
+
+    if (!formData.batchNumber || !formData.expiryDate) {
+      setModalError('Batch Number and Expiry Date are required');
+      setIsSaving(false);
+      return;
+    }
+
+    const payload = { 
+      medicineId: formData.medicineId,
+      batchNumber: formData.batchNumber,
+      quantity: Number(formData.quantity) || 0,
+      purchasePrice: Number(formData.purchasePrice) || 0,
+      sellingPrice: Number(formData.sellingPrice) || 0,
+      supplier: formData.supplier || '',
+      expiryDate: formData.expiryDate
+    };
+
+    if (isEditModalOpen) {
+      const updatePayload = {
+        purchasePrice: payload.purchasePrice,
+        sellingPrice: payload.sellingPrice,
+        supplier: payload.supplier,
+        expiryDate: payload.expiryDate
+      };
+      api.put(`/batches/${selectedMedicineId}/${formData.batchNumber}`, updatePayload)
+        .then(() => {
+          setIsEditModalOpen(false);
+          setSelectedMedicineId(formData.medicineId);
+          fetchBatches();
+        })
+        .catch(err => setModalError(err.response?.data?.message || 'Failed to update batch'))
+        .finally(() => setIsSaving(false));
+    } else {
+      api.post('/batches', payload)
+        .then(() => {
+          setIsAddModalOpen(false);
+          if (selectedMedicineId !== formData.medicineId) {
+            setSelectedMedicineId(formData.medicineId);
+          } else {
+            fetchBatches();
+          }
+        })
+        .catch(err => setModalError(err.response?.data?.message || 'Failed to add batch'))
+        .finally(() => setIsSaving(false));
+    }
+  };
+
+  const openEditModal = (batch) => {
+    const formattedDate = batch.expiryDate ? new Date(batch.expiryDate).toISOString().split('T')[0] : '';
+    setFormData({
+      medicineId: selectedMedicineId,
+      batchNumber: batch.batchNumber,
+      quantity: batch.quantity,
+      purchasePrice: batch.purchasePrice,
+      sellingPrice: batch.sellingPrice,
+      supplier: batch.supplier || '',
+      expiryDate: formattedDate
+    });
+    setModalError('');
+    setIsEditModalOpen(true);
+  };
+  
+  const openAddModal = () => {
+    setFormData({ ...initialForm, medicineId: selectedMedicineId });
+    setModalError('');
+    setIsAddModalOpen(true);
+  };
 
   return (
     <>
@@ -401,21 +542,35 @@ const Batch = () => {
           border-radius: 50%;
         }
 
-        .btn-solid-full {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          padding: 0.6rem 1.25rem;
-          background-color: #2563eb;
-          border: none;
-          border-radius: 9999px;
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: white;
-          cursor: pointer;
-        }
+          .btn-solid-full {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            background-color: #2563eb;
+            border: none;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+          }
+
+          .btn-solid {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            background-color: #2563eb;
+            border: none;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+          }
 
         /* Main Table Panel */
         .panel-card {
@@ -688,6 +843,15 @@ const Batch = () => {
           display: flex;
           justify-content: flex-end;
           gap: 0.5rem;
+          margin-top: 1rem;
+        }
+        .modal-error {
+          color: #ef4444;
+          font-size: 0.875rem;
+          margin-bottom: 1rem;
+          background-color: #fef2f2;
+          padding: 0.5rem;
+          border-radius: 0.25rem;
         }
       `}</style>
 
@@ -759,91 +923,90 @@ const Batch = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button className="btn-filter">
+              <button className="btn-filter" style={{ marginRight: '0.5rem' }}>
                 <SlidersHorizontal size={16} />
+              </button>
+              <button className="btn-solid" onClick={openAddModal}>
+                <Plus size={16} /> Add Batch
               </button>
             </div>
           </header>
 
           {/* KPI Cards */}
-          <div className="kpi-grid">
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <span className="kpi-title">Total Batches</span>
-                <div className="kpi-icon icon-blue"><LayoutGrid size={18} /></div>
-              </div>
-              <div>
-                <div className="kpi-value">{batchData.kpis.total}</div>
-                <div className="kpi-footer">
-                  <span className="text-green">↑ +0% this month</span>
+          {selectedMedicineId && (
+            <div className="kpi-grid">
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span className="kpi-title">Total Batches</span>
+                  <div className="kpi-icon icon-blue"><LayoutGrid size={18} /></div>
+                </div>
+                <div>
+                  <div className="kpi-value">{kpis.total}</div>
                 </div>
               </div>
-            </div>
 
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <span className="kpi-title">Expiring Soon</span>
-                <div className="kpi-icon icon-blue"><Calendar size={18} /></div>
-              </div>
-              <div>
-                <div className="kpi-value">{batchData.kpis.expiring}</div>
-                <div className="kpi-footer">
-                  <span className="text-orange">⏱ Within 30 days</span>
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span className="kpi-title">Expiring Soon</span>
+                  <div className="kpi-icon icon-blue"><Calendar size={18} /></div>
+                </div>
+                <div>
+                  <div className="kpi-value">{kpis.expiring}</div>
+                  <div className="kpi-footer">
+                    <span className="text-orange">⏱ Within 30 days</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <span className="kpi-title">Expired Batches</span>
-                <div className="kpi-icon icon-red"><AlertTriangle size={18} /></div>
-              </div>
-              <div>
-                <div className="kpi-value val-red">{batchData.kpis.expired}</div>
-                <div className="kpi-footer">
-                  <span className="text-red">⚠ Needs immediate action</span>
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span className="kpi-title">Expired Batches</span>
+                  <div className="kpi-icon icon-red"><AlertTriangle size={18} /></div>
+                </div>
+                <div>
+                  <div className="kpi-value val-red">{kpis.expired}</div>
+                  <div className="kpi-footer">
+                    <span className="text-red">⚠ Needs immediate action</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="kpi-card protocol-card">
-              <div>
-                <div className="protocol-header">
-                  <span className="kpi-title">Quick Protocol</span>
-                  <span className="status-ready"><span className="dot-green"></span> Ready</span>
+              <div className="kpi-card protocol-card">
+                <div>
+                  <div className="protocol-header">
+                    <span className="kpi-title">Quick Protocol</span>
+                    <span className="status-ready"><span className="dot-green"></span> Ready</span>
+                  </div>
+                  <div className="protocol-title">Fast Intake Form</div>
+                  <div className="protocol-desc">Assign verified NDC, track cold-chain lot codes.</div>
                 </div>
-                <div className="protocol-title">Fast Intake Form</div>
-                <div className="protocol-desc">Assign verified NDC, track cold-chain lot codes.</div>
               </div>
-              <button className="btn-solid-full" onClick={() => setIsAddModalOpen(true)}>
-                <Plus size={16} /> Add Batch
-              </button>
             </div>
-          </div>
+          )}
 
           {/* Batch List Panel */}
           <div className="panel-card">
             <div className="panel-header">
               <h2 className="panel-title">
-                Batch List <span className="badge-gray">156 items</span>
+                Batch List <span className="badge-gray">{batchData.total} items</span>
               </h2>
               <div className="panel-controls">
                 <div className="table-search">
                   <Search className="search-icon" />
                   <input 
                     type="text" 
-                    placeholder="Search batch or medicine..." 
+                    placeholder="Search batch..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <select className="table-select">
-                  <option>All Medicines</option>
+                <select className="table-select" value={selectedMedicineId} onChange={e => setSelectedMedicineId(e.target.value)}>
+                  <option value="">Select a Medicine...</option>
+                  {medicines.map(m => (
+                    <option key={m.medicineId} value={m.medicineId}>{m.name} ({m.medicineId})</option>
+                  ))}
                 </select>
-                <select className="table-select">
-                  <option>All Status</option>
-                </select>
-                <button className="action-btn" style={{ marginLeft: '0.5rem' }}>
+                <button className="action-btn" style={{ marginLeft: '0.5rem' }} onClick={fetchBatches}>
                   <RefreshCw size={16} />
                 </button>
               </div>
@@ -853,52 +1016,71 @@ const Batch = () => {
               <table>
                 <thead>
                   <tr>
-                    <th>Medicine Name</th>
                     <th>Batch No.</th>
-                    <th>Mfg. Date</th>
-                    <th>Expiry Date</th>
-                    <th>Quantity</th>
                     <th>Supplier</th>
-                    <th>Status</th>
+                    <th>Purchase Price</th>
+                    <th>Selling Price</th>
+                    <th>Quantity</th>
+                    <th>Expiry Date</th>
                     <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-
-                  {filteredBatches.length > 0 ? (
-                    filteredBatches.map((batch, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          <div className="med-cell">
-                            <Link2 className={`link-icon-${batch.iconColor}`} />
-                            <span>{batch.name}</span>
-                          </div>
-                        </td>
-                        <td>{batch.batchId}</td>
-                        <td>{batch.mfgDate}</td>
-                        <td className={batch.expiryClass}>{batch.expiryDate}</td>
-                        <td className={batch.qtyClass} style={{ fontWeight: 500 }}>{batch.qty}</td>
-                        <td>{batch.supplier}</td>
-                        <td><div className={`status-dot-cell ${batch.statusClass}`}>● {batch.status}</div></td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button className="action-btn" style={{ margin: '0 auto' }}><MoreHorizontal size={18} /></button>
-                        </td>
-                      </tr>
-                    ))
+                  {!selectedMedicineId ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        Select a medicine to view its batches.
+                      </td>
+                    </tr>
+                  ) : loading ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        Loading batches...
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+                        {error}
+                      </td>
+                    </tr>
+                  ) : filteredBatches.length > 0 ? (
+                    filteredBatches.map((batch, idx) => {
+                      const days = getDayDiff(batch.expiryDate);
+                      let dateColor = '#0f172a';
+                      if (days < 0) dateColor = '#ef4444';
+                      else if (days <= 30) dateColor = '#f97316';
+                      
+                      const formattedDate = batch.expiryDate ? new Date(batch.expiryDate).toISOString().split('T')[0] : '';
+                      
+                      return (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: 600 }}>{batch.batchNumber}</td>
+                          <td>{batch.supplier || '--'}</td>
+                          <td>${batch.purchasePrice}</td>
+                          <td>${batch.sellingPrice}</td>
+                          <td style={{ fontWeight: 500 }}>{batch.quantity}</td>
+                          <td style={{ color: dateColor, fontWeight: 500 }}>{formattedDate}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button onClick={() => openEditModal(batch)} style={{background:'none', border:'none', color:'#2563eb', cursor:'pointer', marginRight: '0.75rem', fontWeight: 600}}>Edit</button>
+                            <button onClick={() => handleDelete(batch.batchNumber)} style={{background:'none', border:'none', color:'#ef4444', cursor:'pointer', fontWeight: 600}}>Delete</button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                        {searchQuery ? "No matches found." : "No batches loaded. Database connection pending."}
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        {searchQuery ? "No matches found." : "No batches for this medicine."}
                       </td>
                     </tr>
                   )}
-
                 </tbody>
               </table>
             </div>
 
             <div className="table-footer">
-              <div className="showing-text">Showing 1-7 of 156 batches</div>
+              <div className="showing-text">Showing {filteredBatches.length} of {batchData.total} batches</div>
               <div className="pagination">
                 <button className="page-btn" style={{ color: '#94a3b8' }}><ChevronLeft size={16} /></button>
                 <button className="page-btn active">1</button>
@@ -923,21 +1105,94 @@ const Batch = () => {
         </footer>
       </div>
 
-      {isAddModalOpen && (
+      {(isAddModalOpen || isEditModalOpen) && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">Add New Batch</h3>
-            <input type="text" className="modal-input" placeholder="Batch ID" />
-            <input type="text" className="modal-input" placeholder="Medicine Name" />
+            <h3 className="modal-title">{isEditModalOpen ? 'Edit Batch' : 'Add New Batch'}</h3>
+            
+            {modalError && <div className="modal-error">{modalError}</div>}
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Medicine *</label>
+            <select 
+              className="modal-input" 
+              value={formData.medicineId}
+              onChange={(e) => setFormData({...formData, medicineId: e.target.value})}
+              disabled={isEditModalOpen}
+            >
+              <option value="">Select Medicine</option>
+              {medicines.map(m => (
+                <option key={m.medicineId} value={m.medicineId}>{m.name} ({m.medicineId})</option>
+              ))}
+            </select>
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Batch Number *</label>
+            <input 
+              type="text" 
+              className="modal-input" 
+              placeholder="e.g. B001" 
+              value={formData.batchNumber}
+              onChange={(e) => setFormData({...formData, batchNumber: e.target.value})}
+              disabled={isEditModalOpen}
+            />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Quantity *</label>
+            <input 
+              type="number" 
+              className="modal-input" 
+              placeholder="0" 
+              min="0"
+              value={formData.quantity}
+              onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+              disabled={isEditModalOpen}
+            />
+            {isEditModalOpen && <div style={{fontSize: '0.7rem', color: '#64748b', marginTop: '-0.75rem', marginBottom: '1rem'}}>Change quantity on the Stock page.</div>}
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Purchase Price *</label>
+            <input 
+              type="number" 
+              className="modal-input" 
+              placeholder="0.00" 
+              min="0"
+              value={formData.purchasePrice}
+              onChange={(e) => setFormData({...formData, purchasePrice: e.target.value})}
+            />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Selling Price *</label>
+            <input 
+              type="number" 
+              className="modal-input" 
+              placeholder="0.00" 
+              min="0"
+              value={formData.sellingPrice}
+              onChange={(e) => setFormData({...formData, sellingPrice: e.target.value})}
+            />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Supplier</label>
+            <input 
+              type="text" 
+              className="modal-input" 
+              placeholder="e.g. McKesson" 
+              value={formData.supplier}
+              onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+            />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Expiry Date *</label>
+            <input 
+              type="date" 
+              className="modal-input" 
+              value={formData.expiryDate}
+              onChange={(e) => setFormData({...formData, expiryDate: e.target.value})}
+            />
+
             <div className="modal-actions">
-              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-              <button className="btn-solid" onClick={() => {
-                setBatchData(prev => ({
-                  ...prev,
-                  batchesList: [...prev.batchesList, { name: "New Batch", batchId: "NEW-123", statusClass: "s-green", status: "Active" }]
-                }));
+              <button className="btn-outline" onClick={() => {
                 setIsAddModalOpen(false);
-              }}>Save</button>
+                setIsEditModalOpen(false);
+              }} disabled={isSaving}>Cancel</button>
+              
+              <button className="btn-solid" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from './api/axios';
 import { 
   Search, Bell, Download, Plus, Filter,
   ChevronDown, ChevronLeft, ChevronRight,
@@ -8,22 +9,118 @@ import {
 
 const Medicine = () => {
   const [medicineData, setMedicineData] = useState({
-    kpis: {
-      total: 0,
-      optimal: 0,
-      lowStock: 0,
-      expiring: 0
-    },
+    total: 0,
     medicinesList: []
   });
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newMedicine, setNewMedicine] = useState({ name: '', sku: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const filteredMedicines = medicineData.medicinesList.filter(med => 
-    !searchQuery || JSON.stringify(med).toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const initialForm = { medicineId: '', name: '', dosageForm: '', category: '', manufacturer: '', unit: '', minimumStock: 0 };
+  const [formData, setFormData] = useState(initialForm);
+
+  const fetchMedicines = () => {
+    setLoading(true);
+    api.get('/medicines', { params: { search: searchQuery } })
+      .then(res => {
+        setMedicineData({
+          total: res.data.count || res.data.medicines?.length || 0,
+          medicinesList: res.data.medicines || []
+        });
+        setError('');
+      })
+      .catch(err => {
+        setError(err.response?.data?.message || 'Failed to load medicines.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchMedicines();
+  }, [searchQuery]);
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this medicine?')) {
+      api.delete(`/medicines/${id}`)
+        .then(() => fetchMedicines())
+        .catch(err => alert(err.response?.data?.message || 'Failed to delete medicine'));
+    }
+  };
+
+  const handleSave = () => {
+    if (!formData.medicineId || !formData.name || !formData.category || !formData.dosageForm || !formData.manufacturer || !formData.unit) {
+      setModalError('Please fill in all required fields.');
+      return;
+    }
+    if (Number(formData.minimumStock) < 0) {
+      setModalError('Minimum stock cannot be negative.');
+      return;
+    }
+
+    setModalError('');
+    setIsSaving(true);
+    
+    const payload = { ...formData, minimumStock: Number(formData.minimumStock) };
+
+    const request = isEditModalOpen 
+      ? api.put(`/medicines/${formData.medicineId}`, payload)
+      : api.post('/medicines', payload);
+
+    request
+      .then(() => {
+        setIsAddModalOpen(false);
+        setIsEditModalOpen(false);
+        setFormData(initialForm);
+        fetchMedicines();
+      })
+      .catch(err => {
+        console.error("Save medicine error:", err);
+        const backendMessage = err.response?.data?.message;
+        const validationError = err.response?.data?.error;
+        let errorMessage = 'Failed to save medicine: ' + (err.message || 'Unknown error');
+        
+        if (validationError && validationError.includes('validation failed')) {
+            errorMessage = 'Validation failed: Please ensure all fields are correct. ' + (backendMessage || '');
+        } else if (backendMessage) {
+            errorMessage = backendMessage;
+        } else if (validationError) {
+            errorMessage = validationError;
+        }
+        
+        setModalError(errorMessage);
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
+  };
+
+  const openEditModal = (med) => {
+    setFormData({
+      medicineId: med.medicineId || '',
+      name: med.name || '',
+      dosageForm: med.dosageForm || '',
+      category: med.category || '',
+      manufacturer: med.manufacturer || '',
+      unit: med.unit || '',
+      minimumStock: med.minimumStock || 0
+    });
+    setModalError('');
+    setIsEditModalOpen(true);
+  };
+  
+  const openAddModal = () => {
+    setFormData(initialForm);
+    setModalError('');
+    setIsAddModalOpen(true);
+  };
 
   return (
     <>
@@ -607,6 +704,8 @@ const Medicine = () => {
           border-radius: 1rem;
           width: 400px;
           max-width: 90%;
+          max-height: 90vh;
+          overflow-y: auto;
         }
         .modal-title {
           font-size: 1.25rem;
@@ -624,6 +723,15 @@ const Medicine = () => {
           display: flex;
           justify-content: flex-end;
           gap: 0.5rem;
+          margin-top: 1rem;
+        }
+        .modal-error {
+          color: #ef4444;
+          font-size: 0.875rem;
+          margin-bottom: 1rem;
+          background-color: #fef2f2;
+          padding: 0.5rem;
+          border-radius: 0.25rem;
         }
       `}</style>
 
@@ -682,87 +790,12 @@ const Medicine = () => {
               <button className="btn-outline">
                 <Download size={16} /> Export CSV / Report
               </button>
-              <button className="btn-solid" onClick={() => setIsAddModalOpen(true)}>
+              <button className="btn-solid" onClick={openAddModal}>
                 <Plus size={16} /> Add New Medicine
               </button>
             </div>
           </header>
 
-          {/* KPI Cards */}
-          <div className="kpi-grid">
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <div className="kpi-icon-wrapper icon-blue"><Activity size={18} /></div>
-                <div className="kpi-badge badge-blue">● Active Roster</div>
-              </div>
-              <div>
-                <div className="kpi-value">{medicineData.kpis.total}</div>
-                <div className="kpi-title">Total Formulations / SKUs</div>
-                <div className="kpi-footer">
-                  <span>99.2% formulary ready</span>
-                  <span className="text-blue-bold">↗ +0 this wk</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <div className="kpi-icon-wrapper icon-blue"><CheckCircle2 size={18} /></div>
-                <div className="kpi-badge badge-blue">● Healthy</div>
-              </div>
-              <div>
-                <div className="kpi-value">{medicineData.kpis.optimal}</div>
-                <div className="kpi-title">Optimal Stock Level</div>
-                <div className="kpi-footer">
-                  <span>Safety buffer at 96.7%</span>
-                  <span>Verified today</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <div className="kpi-icon-wrapper icon-blue" style={{backgroundColor:'#f1f5f9', color:'#475569'}}><ShieldAlert size={18} /></div>
-                <div className="kpi-badge badge-gray">● Action Required</div>
-              </div>
-              <div>
-                <div className="kpi-value">{medicineData.kpis.lowStock}</div>
-                <div className="kpi-title">Low Stock / Reorder</div>
-                <div className="kpi-footer">
-                  <span>0 auto-PO triggers sent</span>
-                  <span className="text-blue-bold">Review ↗</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <div className="kpi-header">
-                <div className="kpi-icon-wrapper icon-red"><AlertCircle size={18} /></div>
-                <div className="kpi-badge badge-red">● Next 30 Days</div>
-              </div>
-              <div>
-                <div className="kpi-value val-red">{medicineData.kpis.expiring}</div>
-                <div className="kpi-title">Batches Nearing Expiry</div>
-                <div className="kpi-footer">
-                  <span>FEFO quarantine ready</span>
-                  <span className="text-red-bold">Critical review</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Banner */}
-          <div className="notice-banner">
-            <div className="banner-img"></div>
-            <div className="banner-content">
-              <div className="banner-header">
-                <span className="banner-tag">Cold Chain Notice</span>
-                <span className="banner-station">Station #04 Refrigeration Unit Alpha</span>
-              </div>
-              <h3 className="banner-title">Automated FEFO (First-Expired, First-Out) Protocol Active</h3>
-              <p className="banner-desc">Insulin and biological formulations are prioritized by batch date. Automated reorder webhooks are synchronized with McKesson and AmerisourceBergen dispatch gateways.</p>
-            </div>
-          </div>
 
           {/* Table Controls */}
           <div className="filter-section">
@@ -777,7 +810,7 @@ const Medicine = () => {
                 />
               </div>
               <div className="category-pills">
-                <div className="cat-pill active">All Stock ({medicineData.kpis.total})</div>
+                <div className="cat-pill active">All Stock ({medicineData.total})</div>
                 <div className="cat-pill">Antibiotics</div>
                 <div className="cat-pill">Analgesics</div>
                 <div className="cat-pill">Cardiovascular</div>
@@ -817,39 +850,52 @@ const Medicine = () => {
             <table>
               <thead>
                 <tr>
-                  <th>Medicine Formulation</th>
-                  <th>SKU / Code</th>
+                  <th>Medicine ID</th>
+                  <th>Name & Manufacturer</th>
                   <th>Category</th>
-                  <th>Dosage</th>
-                  <th>Current Stock & Par</th>
-                  <th>Batch & Expiry</th>
-                  <th>Status</th>
+                  <th>Dosage & Unit</th>
+                  <th>Min Stock</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredMedicines.length > 0 ? (
-                  filteredMedicines.map((med, idx) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6">
+                      <div className="empty-state">Loading medicines...</div>
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="6">
+                      <div className="empty-state" style={{color: '#ef4444'}}>{error}</div>
+                    </td>
+                  </tr>
+                ) : medicineData.medicinesList.length > 0 ? (
+                  medicineData.medicinesList.map((med, idx) => (
                     <tr key={idx}>
+                      <td>{med.medicineId}</td>
                       <td>
                         <div className="med-name">{med.name}</div>
+                        <div style={{fontSize: '0.75rem', color: '#64748b'}}>{med.manufacturer || '--'}</div>
                       </td>
-                      <td>{med.sku || 'N/A'}</td>
-                      <td>--</td>
-                      <td>--</td>
-                      <td>--</td>
-                      <td>--</td>
-                      <td><span className="badge-gray" style={{padding: '0.2rem 0.5rem', borderRadius: '4px'}}>New</span></td>
+                      <td>{med.category || '--'}</td>
                       <td>
-                        <button style={{background:'none', border:'none', color:'#64748b'}}><MoreHorizontal size={16} /></button>
+                        {med.dosageForm || '--'} <br/>
+                        <span style={{fontSize: '0.75rem', color: '#64748b'}}>Unit: {med.unit || '--'}</span>
+                      </td>
+                      <td>{med.minimumStock}</td>
+                      <td>
+                        <button onClick={() => openEditModal(med)} style={{background:'none', border:'none', color:'#2563eb', cursor:'pointer', marginRight: '0.5rem', fontWeight: 600}}>Edit</button>
+                        <button onClick={() => handleDelete(med.medicineId)} style={{background:'none', border:'none', color:'#ef4444', cursor:'pointer', fontWeight: 600}}>Delete</button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8">
+                    <td colSpan="6">
                       <div className="empty-state">
-                        {searchQuery ? "No matches found." : "No medicines loaded. Database connection pending."}
+                        {searchQuery ? "No matches found." : "No medicines found."}
                       </div>
                     </td>
                   </tr>
@@ -860,7 +906,7 @@ const Medicine = () => {
           
           <div className="table-footer">
             <div className="showing-text">
-              Showing 1-0 of {medicineData.kpis.total} medicines
+              Showing {medicineData.medicinesList.length} of {medicineData.total} medicines
               <span style={{display:'flex', alignItems:'center', gap:'0.5rem', marginLeft:'1rem'}}>
                 Per page: 
                 <select className="per-page-select">
@@ -892,36 +938,112 @@ const Medicine = () => {
         </footer>
       </div>
 
-      {isAddModalOpen && (
+      {(isAddModalOpen || isEditModalOpen) && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">Add New Medicine</h3>
+            <h3 className="modal-title">{isEditModalOpen ? 'Edit Medicine' : 'Add New Medicine'}</h3>
+            
+            {modalError && <div className="modal-error">{modalError}</div>}
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Medicine ID *</label>
             <input 
               type="text" 
               className="modal-input" 
-              placeholder="Medicine Name" 
-              value={newMedicine.name}
-              onChange={(e) => setNewMedicine({...newMedicine, name: e.target.value})}
+              placeholder="e.g. MED-001" 
+              value={formData.medicineId}
+              onChange={(e) => setFormData({...formData, medicineId: e.target.value})}
+              disabled={isEditModalOpen}
             />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Medicine Name *</label>
             <input 
               type="text" 
               className="modal-input" 
-              placeholder="SKU / Code" 
-              value={newMedicine.sku}
-              onChange={(e) => setNewMedicine({...newMedicine, sku: e.target.value})}
+              placeholder="e.g. Amoxicillin" 
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
             />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Dosage Form *</label>
+            <select
+              className="modal-input"
+              value={formData.dosageForm}
+              onChange={(e) => setFormData({...formData, dosageForm: e.target.value})}
+            >
+              <option value="">Select Dosage Form</option>
+              <option value="Tablet">Tablet</option>
+              <option value="Capsule">Capsule</option>
+              <option value="Syrup">Syrup</option>
+              <option value="Injection">Injection</option>
+              <option value="Ointment">Ointment</option>
+              <option value="Drops">Drops</option>
+              <option value="Inhaler">Inhaler</option>
+              <option value="Cream">Cream</option>
+              <option value="Suppository">Suppository</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Category *</label>
+            <select
+              className="modal-input"
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+            >
+              <option value="">Select Category</option>
+              <option value="Antibiotics">Antibiotics</option>
+              <option value="Analgesics">Analgesics</option>
+              <option value="Cardiovascular">Cardiovascular</option>
+              <option value="Respiratory">Respiratory</option>
+              <option value="Cold-Chain Biologics">Cold-Chain Biologics</option>
+              <option value="Vitamins">Vitamins</option>
+              <option value="Painkiller">Painkiller</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Manufacturer *</label>
+            <input 
+              type="text" 
+              className="modal-input" 
+              placeholder="e.g. Pfizer" 
+              value={formData.manufacturer}
+              onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+            />
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Unit *</label>
+            <select
+              className="modal-input"
+              value={formData.unit}
+              onChange={(e) => setFormData({...formData, unit: e.target.value})}
+            >
+              <option value="">Select Unit</option>
+              <option value="Box">Box</option>
+              <option value="Bottle">Bottle</option>
+              <option value="Blister Pack">Blister Pack</option>
+              <option value="Vial">Vial</option>
+              <option value="Ampoule">Ampoule</option>
+              <option value="Tube">Tube</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <label style={{fontSize: '0.8rem', fontWeight: 500}}>Minimum Stock</label>
+            <input 
+              type="number" 
+              className="modal-input" 
+              placeholder="0" 
+              min="0"
+              value={formData.minimumStock}
+              onChange={(e) => setFormData({...formData, minimumStock: e.target.value})}
+            />
+
             <div className="modal-actions">
-              <button className="btn-outline" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-              <button className="btn-solid" onClick={() => {
-                if(newMedicine.name.trim()) {
-                  setMedicineData(prev => ({
-                    ...prev,
-                    medicinesList: [...prev.medicinesList, { name: newMedicine.name, sku: newMedicine.sku, dummy: true }]
-                  }));
-                  setNewMedicine({ name: '', sku: '' });
-                  setIsAddModalOpen(false);
-                }
-              }}>Save</button>
+              <button className="btn-outline" onClick={() => {
+                setIsAddModalOpen(false);
+                setIsEditModalOpen(false);
+              }} disabled={isSaving}>Cancel</button>
+              
+              <button className="btn-solid" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         </div>

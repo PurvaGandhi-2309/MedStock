@@ -37,11 +37,11 @@ const Signup = () => {
       password: formData.password
     };
 
-    api.post('/signup', payload)
+    api.post('/auth/signup', payload)
       .then(res => {
-        if (res.data.token) {
-          localStorage.setItem("token", res.data.token);
-          navigate('/dashboard');
+        if (res.data.user) {
+          // Signup successful, redirect to login
+          navigate('/login');
         } else {
           navigate('/login');
         }
