@@ -124,19 +124,27 @@ const getInventoryInsights = async (req, res) => {
         let insights;
         try {
             insights = JSON.parse(cleanAnswer);
+            // 8. Send back the backend numbers + Gemini's text
+            res.status(200).json({
+                stats: stats,
+                insights: {
+                    summary: insights.summary,
+                    importantWarnings: insights.importantWarnings,
+                    reorderSuggestions: insights.reorderSuggestions,
+                },
+            });
         } catch (parseError) {
-            return res.status(500).json({ message: "Gemini reply was not valid JSON. Please try again." });
+            // Fallback: If Gemini didn't return valid JSON, just return the raw text as the summary
+            console.error("Failed to parse Gemini JSON:", parseError);
+            res.status(200).json({
+                stats: stats,
+                insights: {
+                    summary: answer, // Return the raw text
+                    importantWarnings: [],
+                    reorderSuggestions: []
+                }
+            });
         }
-
-        // 8. Send back the backend numbers + Gemini's text
-        res.status(200).json({
-            stats: stats,
-            insights: {
-                summary: insights.summary,
-                importantWarnings: insights.importantWarnings,
-                reorderSuggestions: insights.reorderSuggestions,
-            },
-        });
     } catch (error) {
         res.status(500).json({ message: "AI service error", error: error.message });
     }

@@ -1,4 +1,5 @@
 const Medicine = require("../models/Medicine");
+const Batch = require("../models/Batch");
 // POST /api/medicines
 const createMedicine = async (req, res) => {
     try {
@@ -128,20 +129,45 @@ const updateMedicine = async (req, res) => {
     }
 };
 // DELETE /api/medicines/:id
+// const deleteMedicine = async (req, res) => {
+//     try {
+//         // const medicine = await Medicine.findByIdAndDelete(req.params.id);
+//         const medicine = await Medicine.findOneAndDelete({ medicineId: req.params.id })
+
+//         if (!medicine) {
+//             return res.status(404).json({ message: "Medicine not found" });
+//         }
+
+//         res.status(200).json({ message: "Medicine deleted" });
+//     } catch (error) {
+//         if (error.name === "CastError") {
+//             return res.status(400).json({ message: "Invalid medicine id" });
+//         }
+//         res.status(500).json({ message: "Server error", error: error.message });
+//     }
+// };
+// DELETE /api/medicines/MED001
 const deleteMedicine = async (req, res) => {
     try {
-        // const medicine = await Medicine.findByIdAndDelete(req.params.id);
-        const medicine = await Medicine.findOneAndDelete({ medicineId: req.params.id })
-
+        // STEP 1: check the medicine exists
+        const medicine = await Medicine.findOne({ medicineId: req.params.id });
         if (!medicine) {
             return res.status(404).json({ message: "Medicine not found" });
         }
 
+        // STEP 2: do not delete if this medicine still has batches
+        const batchCount = await Batch.countDocuments({ medicineId: req.params.id });
+        if (batchCount > 0) {
+            return res.status(400).json({
+                message: "Cannot delete. This medicine still has " + batchCount + " batch(es). Delete the batches first.",
+            });
+        }
+
+        // STEP 3: safe to delete
+        await Medicine.findOneAndDelete({ medicineId: req.params.id });
+
         res.status(200).json({ message: "Medicine deleted" });
     } catch (error) {
-        if (error.name === "CastError") {
-            return res.status(400).json({ message: "Invalid medicine id" });
-        }
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };

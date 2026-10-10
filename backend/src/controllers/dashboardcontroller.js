@@ -4,9 +4,17 @@ const Transaction = require("../models/Transaction");
 
 const ONE_DAY = 1000 * 60 * 60 * 24; // milliseconds in one day
 
+const User = require("../models/User");
+
 // GET /api/dashboard
 const getDashboard = async (req, res) => {
     try {
+        let userName = "Pharmacist";
+        if (req.user && req.user.id) {
+            const user = await User.findById(req.user.id);
+            if (user) userName = user.name;
+        }
+
         const today = new Date();
         const in30Days = new Date(today.getTime() + 30 * ONE_DAY);
 
@@ -64,10 +72,19 @@ const getDashboard = async (req, res) => {
 
         const categorySummary = Object.values(categories); // turn the object into a list
 
-        // 4. Stock IN and OUT totals from the transaction history
+        // 4. Stock IN and OUT totals and 7-day daily stats
         const transactions = await Transaction.find();
         let stockInTotal = 0;
         let stockOutTotal = 0;
+
+        // Initialize daily stats for the last 7 days
+        const dailyStatsMap = {};
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            dailyStatsMap[dateStr] = { date: dateStr, in: 0, out: 0 };
+        }
 
         for (const t of transactions) {
             if (t.type === "IN") {
@@ -75,10 +92,29 @@ const getDashboard = async (req, res) => {
             } else {
                 stockOutTotal = stockOutTotal + t.quantity;
             }
+
+            // Aggregate daily stats
+            const tDateStr = t.date.toISOString().split('T')[0];
+            if (dailyStatsMap[tDateStr]) {
+                if (t.type === "IN") dailyStatsMap[tDateStr].in += t.quantity;
+                else dailyStatsMap[tDateStr].out += t.quantity;
+            }
         }
+        
+        const dailyStats = Object.values(dailyStatsMap);
 
         // 5. Last 5 transactions, newest first
-        const recentTransactions = await Transaction.find().sort({ date: -1 }).limit(5);
+        const transactionsList = await Transaction.find().sort({ date: -1 }).limit(5);
+        const recentTransactions = transactionsList.map(t => {
+            const med = medicines.find(m => m.medicineId === t.medicineId);
+            return {
+                id: t._id,
+                type: t.type,
+                medicineName: med ? med.name : t.medicineId,
+                quantity: t.quantity,
+                date: t.date
+            };
+        });
 
         res.status(200).json({
             totalMedicines,
@@ -90,6 +126,9 @@ const getDashboard = async (req, res) => {
             stockOutTotal,
             recentTransactions,
             categorySummary,
+            categorySummary,
+            dailyStats,
+            userName
         });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });

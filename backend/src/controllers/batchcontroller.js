@@ -1,6 +1,16 @@
 const Batch = require("../models/Batch");
 const Medicine = require("../models/Medicine");
 
+// GET /api/batches
+const getAllBatches = async (req, res) => {
+    try {
+        const batches = await Batch.find({});
+        res.status(200).json(batches);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 // POST /api/batches
 const createBatch = async (req, res) => {
     try {
@@ -143,6 +153,7 @@ const deleteBatch = async (req, res) => {
 };
 module.exports = {
     createBatch,
+    getAllBatches,
     getBatchesByMedicine,
     getBatch,
     updateBatch,
