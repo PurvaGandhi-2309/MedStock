@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './App.css';
+import logoSvg from './assets/logo_pixel.png';
 import { Eye, Clock, TrendingUp, Package, Search, AlertCircle, BarChart2, Shield } from 'lucide-react';
 
 function App() {
@@ -35,8 +36,8 @@ function App() {
       <nav className="navbar">
         <div className="nav-content">
           <div className="logo-container">
-            <div className="logo-icon">
-              <Shield size={20} color="#2563eb" />
+            <div className="logo-icon" style={{ background: 'transparent', padding: 0, height: '40px', width: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={logoSvg} alt="MedStock Logo" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
             </div>
             <span className="logo-text">MedStock</span>
           </div>
@@ -239,8 +240,8 @@ function App() {
         <div className="footer-content">
           <div className="footer-left">
             <div className="logo-container">
-              <div className="logo-icon">
-                <Shield size={20} color="#2563eb" />
+              <div className="logo-icon" style={{ background: 'transparent', padding: 0, height: '40px', width: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={logoSvg} alt="MedStock Logo" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
               </div>
               <span className="logo-text">MedStock</span>
             </div>

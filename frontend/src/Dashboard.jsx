@@ -1,3 +1,4 @@
+import logoSvg from './assets/logo_pixel.png';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from './api/axios';
@@ -41,6 +42,7 @@ const Dashboard = () => {
     dailyStats: [],
     userName: 'Pharmacist'
   });
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -482,18 +484,25 @@ const Dashboard = () => {
       <div className="dashboard-container">
         <nav className="top-nav">
           <div className="brand">
-            <div className="logo-mark">M</div>
+            <img src={logoSvg} alt="MedStock Logo" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
             <span>MedStock</span>
           </div>
           <div className="nav-links">
             <div className="nav-search">
               <Search className="search-icon" size={16} />
-              <input type="text" placeholder="Search inventory..." />
+              <input type="text" placeholder="Search inventory..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <a href="/dashboard" className="nav-item active">Dashboard</a>
-            <a href="/medicines" className="nav-item">Medicines</a>
-            <a href="/batch" className="nav-item">Batches</a>
-            <button onClick={handleLogout} style={{background:'none', border:'none', color:'#ef4444', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px'}}>
+            
+            <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', backgroundColor: '#f1f5f9', padding: '0.25rem', borderRadius: '9999px', margin: '0 1rem' }}>
+              <a href="/dashboard" className="nav-item" style={{ padding: '0.4rem 1rem', borderRadius: '9999px', background: window.location.pathname === '/dashboard' ? 'white' : 'transparent', boxShadow: window.location.pathname === '/dashboard' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: window.location.pathname === '/dashboard' ? '#0f172a' : '#64748b', textDecoration: 'none', fontWeight: window.location.pathname === '/dashboard' ? '600' : '500' }}>Dashboard</a>
+              <a href="/stock" className="nav-item" style={{ padding: '0.4rem 1rem', borderRadius: '9999px', background: window.location.pathname === '/stock' ? 'white' : 'transparent', boxShadow: window.location.pathname === '/stock' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: window.location.pathname === '/stock' ? '#0f172a' : '#64748b', textDecoration: 'none', fontWeight: window.location.pathname === '/stock' ? '600' : '500' }}>Stock</a>
+              <a href="/batch" className="nav-item" style={{ padding: '0.4rem 1rem', borderRadius: '9999px', background: window.location.pathname === '/batch' ? 'white' : 'transparent', boxShadow: window.location.pathname === '/batch' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: window.location.pathname === '/batch' ? '#0f172a' : '#64748b', textDecoration: 'none', fontWeight: window.location.pathname === '/batch' ? '600' : '500' }}>Batches</a>
+              <a href="/medicines" className="nav-item" style={{ padding: '0.4rem 1rem', borderRadius: '9999px', background: window.location.pathname === '/medicines' ? 'white' : 'transparent', boxShadow: window.location.pathname === '/medicines' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: window.location.pathname === '/medicines' ? '#0f172a' : '#64748b', textDecoration: 'none', fontWeight: window.location.pathname === '/medicines' ? '600' : '500' }}>Medicines</a>
+              <a href="/transactions" className="nav-item" style={{ padding: '0.4rem 1rem', borderRadius: '9999px', background: window.location.pathname === '/transactions' ? 'white' : 'transparent', boxShadow: window.location.pathname === '/transactions' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: window.location.pathname === '/transactions' ? '#0f172a' : '#64748b', textDecoration: 'none', fontWeight: window.location.pathname === '/transactions' ? '600' : '500' }}>Transactions</a>
+              <a href="/alert" className="nav-item" style={{ padding: '0.4rem 1rem', borderRadius: '9999px', background: window.location.pathname === '/alert' ? 'white' : 'transparent', boxShadow: window.location.pathname === '/alert' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: window.location.pathname === '/alert' ? '#0f172a' : '#64748b', textDecoration: 'none', fontWeight: window.location.pathname === '/alert' ? '600' : '500' }}>Alerts</a>
+              <a href="/insights" style={{ background: '#2563eb', color: 'white', textDecoration: 'none', padding: '0.4rem 1rem', borderRadius: '9999px', fontWeight: '600', fontSize: '0.9rem', marginLeft: '0.5rem' }}>AI Insights & Reorder</a>
+            </div>
+<button onClick={handleLogout} style={{background:'none', border:'none', color:'#ef4444', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'4px'}}>
               <LogOut size={16}/> Logout
             </button>
             <div className="user-avatar" title={data.userName}>
@@ -511,7 +520,7 @@ const Dashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <div className="global-search">
                 <Search className="search-icon" size={18} />
-                <input type="text" placeholder="Search medicine, SKU, batch..." />
+                <input type="text" placeholder="Search medicine, SKU, batch..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
               <button className="refresh-btn" onClick={fetchDashboardData} disabled={loading}>
                 <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }}/> Refresh
@@ -675,9 +684,9 @@ const Dashboard = () => {
                           </div>
                         ))}
                       </div>
-                    ) : data.recentTransactions.length > 0 ? (
+                    ) : data.recentTransactions.filter(tx => tx.medicineName.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                       <div className="transaction-list">
-                        {data.recentTransactions.map(tx => (
+                        {data.recentTransactions.filter(tx => tx.medicineName.toLowerCase().includes(searchTerm.toLowerCase())).map(tx => (
                           <div className="transaction-item" key={tx.id}>
                             <div className="tx-left">
                               <div className="tx-name">{tx.medicineName}</div>

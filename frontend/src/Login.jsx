@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoSvg from './assets/logo_pixel.png';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Key, Eye, ArrowRight } from 'lucide-react';
 import api from './api/axios';
@@ -398,7 +399,7 @@ const Login = () => {
         {/* Top Navigation */}
         <nav className="login-nav">
           <a href="/" className="nav-logo">
-            <div className="logo-mark">M</div>
+            <img src={logoSvg} alt="MedStock Logo" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
             <span>MedStock</span>
           </a>
         </nav>

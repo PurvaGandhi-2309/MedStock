@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoSvg from './assets/logo_pixel.png';
 import { useNavigate } from 'react-router-dom';
 import { Shield, User, Mail, Key, Eye, ArrowRight } from 'lucide-react';
 import api from './api/axios';
@@ -40,8 +41,15 @@ const Signup = () => {
     api.post('/auth/signup', payload)
       .then(res => {
         if (res.data.user) {
-          // Signup successful, redirect to login
-          navigate('/login');
+          // Signup successful, auto-login to get token
+          api.post('/auth/login', { email: payload.email, password: payload.password })
+            .then(loginRes => {
+              localStorage.setItem("token", loginRes.data.token);
+              navigate('/dashboard');
+            })
+            .catch(() => {
+              navigate('/login');
+            });
         } else {
           navigate('/login');
         }
@@ -440,7 +448,7 @@ const Signup = () => {
         {/* Top Navigation */}
         <nav className="signup-nav">
           <a href="/" className="nav-logo">
-            <div className="logo-mark">M</div>
+            <img src={logoSvg} alt="MedStock Logo" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
             <span>MedStock</span>
           </a>
           <div className="nav-links">
